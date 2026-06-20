@@ -3,12 +3,12 @@ extends Control
 ## detail view with the Polaroid catch mechanic, the HUD, and win/lose overlay.
 
 const ROOM_COUNT := 6
-const FEED_RENDER_SIZE := Vector2i(480, 270)
+const FEED_RENDER_SIZE := Vector2i(960, 540)
 const ROOM_SCENE := preload("res://scenes/Room.tscn")
 
 # Monitor-wall nodes that live in Main.tscn (edit them in the editor):
 @onready var monitor_screen: Control = $MonitorScreen
-@onready var grid: GridContainer = $MonitorScreen/WallCenter/Grid
+@onready var screen_layout: Node2D = $MonitorScreen/WallCenter/ScreenLayout
 @onready var money_label: Label = $MonitorScreen/TopBar/Money
 @onready var night_label: Label = $MonitorScreen/TopBar/Night
 @onready var clock_label: Label = $MonitorScreen/TopBar/Clock
@@ -74,17 +74,33 @@ func _build_feeds() -> void:
 		rooms.append(room)
 
 func _bind_monitors() -> void:
-	# Each Screen button in Main.tscn shows one live feed and zooms in on click.
-	var screens := grid.get_children()
-	for i in screens.size():
-		var btn := screens[i] as Button
-		if btn == null or i >= feeds.size():
+	# Each screen is an editable 4-point Polygon2D with a matching click hitbox.
+	var feed_uvs := PackedVector2Array([
+		Vector2(0, 0),
+		Vector2(FEED_RENDER_SIZE.x, 0),
+		Vector2(FEED_RENDER_SIZE.x, FEED_RENDER_SIZE.y),
+		Vector2(0, FEED_RENDER_SIZE.y),
+	])
+	for i in ROOM_COUNT:
+		var screen := screen_layout.get_node_or_null("Screen%d" % i) as Node2D
+		if screen == null or i >= feeds.size():
 			continue
-		var tex := btn.get_node("Tex") as TextureRect
-		tex.texture = feeds[i].get_texture()            # the live "iframe"
-		tex.expand_mode = TextureRect.EXPAND_IGNORE_SIZE
-		tex.stretch_mode = TextureRect.STRETCH_SCALE
-		btn.pressed.connect(_open_detail.bind(i))
+		var surface := screen.get_node("Surface") as Polygon2D
+		var hitbox := screen.get_node("Hitbox") as Area2D
+		var collision := hitbox.get_node("CollisionPolygon2D") as CollisionPolygon2D
+		if surface == null or hitbox == null or collision == null:
+			continue
+
+		surface.texture = feeds[i].get_texture()
+		surface.uv = feed_uvs
+		collision.polygon = surface.polygon
+		hitbox.input_pickable = true
+		if not hitbox.input_event.is_connected(_on_screen_hit):
+			hitbox.input_event.connect(_on_screen_hit.bind(i))
+
+func _on_screen_hit(_viewport: Node, event: InputEvent, _shape_idx: int, screen_idx: int) -> void:
+	if event is InputEventMouseButton and event.pressed and event.button_index == MOUSE_BUTTON_LEFT:
+		_open_detail(screen_idx)
 
 func _style_hud() -> void:
 	for l in [money_label, night_label, clock_label]:
