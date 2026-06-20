@@ -29,7 +29,7 @@ func get_active_ferret() -> CasinoPlayer:
 func get_random_innocent() -> CasinoPlayer:
 	var pool: Array[CasinoPlayer] = []
 	for p in players:
-		if not p.is_ferret:
+		if p.occupied and not p.is_ferret:
 			pool.append(p)
 	if pool.is_empty():
 		return null
@@ -37,4 +37,18 @@ func get_random_innocent() -> CasinoPlayer:
 
 func reset_players() -> void:
 	for p in players:
-		p.reset()
+		p.vacate()
+
+## Returns an empty seat to place a character into, or null if the room is full.
+func free_seat() -> CasinoPlayer:
+	for p in players:
+		if not p.occupied:
+			return p
+	return null
+
+func free_seat_count() -> int:
+	var n := 0
+	for p in players:
+		if not p.occupied:
+			n += 1
+	return n

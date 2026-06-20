@@ -14,6 +14,19 @@ const ROOM_SCENES: Array[PackedScene] = [
 	preload("res://scenes/Rooms/Slot Machines.tscn"),
 ]
 const ROOM_NAMES := ["Entrance", "Bar", "Lounge", "Poker", "Roulette", "Slot Machines"]
+# Map of the casino floor, indexed the same as ROOM_NAMES/ROOM_SCENES:
+# Entrance -> Bar -> {Lounge, Poker, Roulette}, with Poker/Roulette also
+# linked to each other via the Slot Machines room.
+const ROOM_GRAPH := {
+	0: [1],          # Entrance -> Bar
+	1: [0, 2, 3, 4],  # Bar -> Entrance, Lounge, Poker, Roulette
+	2: [1],          # Lounge -> Bar
+	3: [1, 5],       # Poker -> Bar, Slot Machines
+	4: [1, 5],       # Roulette -> Bar, Slot Machines
+	5: [3, 4],       # Slot Machines -> Poker, Roulette
+}
+const ENTRANCE_ROOM := 0
+const CHARACTER_COUNT := 9
 const MonitorQuad = preload("res://scripts/monitor_quad.gd")
 const MONEY_SYMBOL_TEXTURE := preload("res://assets/money_digits/money.png")
 const MONEY_DOT_TEXTURE := preload("res://assets/money_digits/dot.png")
@@ -40,6 +53,7 @@ const MONEY_DIGIT_TEXTURES := {
 
 var feeds: Array[SubViewport] = []   # the off-screen render targets (textures)
 var rooms: Array[Room] = []          # the editable room contents (game logic)
+var characters: Array[Dictionary] = []   # roster: {id, room (-1 = queued), seat}
 
 # Popups still built in code (modal UI, not part of the main screen):
 var detail_view: Control
@@ -69,6 +83,7 @@ func _ready() -> void:
 	GameManager.night_changed.connect(_on_night_changed)
 	GameManager.clock_changed.connect(_on_clock_changed)
 	GameManager.photos_changed.connect(_on_photos_changed)
+	GameManager.hour_changed.connect(_on_hour_changed)
 	GameManager.game_over.connect(_on_game_over)
 
 	GameManager.start_game()
@@ -229,6 +244,62 @@ func _build_flash() -> void:
 
 # --- gameplay ---------------------------------------------------------------
 
+## Empties every room and rebuilds the roster: 3 characters seated in the
+## Entrance, the rest queued to walk in as soon as an Entrance seat frees up.
+func _reset_characters() -> void:
+	characters.clear()
+	for id in CHARACTER_COUNT:
+		characters.append({"id": id, "room": -1, "seat": null})
+	for i in range(mini(3, CHARACTER_COUNT)):
+		_place_character(characters[i], ENTRANCE_ROOM)
+
+func _place_character(ch: Dictionary, room_idx: int) -> bool:
+	var seat := rooms[room_idx].free_seat()
+	if seat == null:
+		return false
+	seat.occupy(ch.id)
+	ch.room = room_idx
+	ch.seat = seat
+	return true
+
+func _remove_character(ch: Dictionary) -> void:
+	if ch.seat:
+		ch.seat.vacate()
+	ch.seat = null
+	ch.room = -1
+
+## Runs once per in-game hour: each seated character may step into a connected
+## room that still has space, then queued characters fill any free Entrance
+## seats. A cheating ferret keeps cheating in its new room (GameManager's
+## active_ferrets reference is moved along with it).
+func _on_hour_changed(_hour: int) -> void:
+	if not GameManager.running:
+		return
+
+	var order := characters.duplicate()
+	order.shuffle()
+	for ch in order:
+		if ch.room == -1:
+			continue
+		var options: Array[int] = []
+		for next_room in ROOM_GRAPH[ch.room]:
+			if rooms[next_room].free_seat_count() > 0:
+				options.append(next_room)
+		if options.is_empty():
+			continue
+		var target: int = options[randi() % options.size()]
+		var old_seat: CasinoPlayer = ch.seat
+		var was_ferret := old_seat.is_ferret
+		_remove_character(ch)
+		_place_character(ch, target)
+		if was_ferret:
+			ch.seat.set_ferret(true)
+			GameManager.transfer_ferret(old_seat, ch.seat)
+
+	for ch in characters:
+		if ch.room == -1 and rooms[ENTRANCE_ROOM].free_seat_count() > 0:
+			_place_character(ch, ENTRANCE_ROOM)
+
 func _spawn_ferret() -> void:
 	var order := range(ROOM_COUNT)
 	order.shuffle()
@@ -293,6 +364,7 @@ func _on_night_changed(night: int) -> void:
 	night_label.text = "Night %d / %d" % [night, GameManager.MAX_NIGHTS]
 	for r in rooms:
 		r.reset_players()
+	_reset_characters()
 	_close_detail()
 	_show_banner("NIGHT %d" % night)
 

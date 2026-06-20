@@ -9,10 +9,28 @@ class_name CasinoPlayer
 @onready var tell: Node2D = $Tell
 @onready var caught_mark: Node2D = $Caught
 
+var occupied := false
+var character_id := -1
 var is_ferret := false
 var caught := false
 
 func _ready() -> void:
+	_refresh()
+
+## Seats use this as an occupancy slot, since the same room scene now hosts a
+## roving roster of characters rather than 3 permanently-assigned patrons.
+func occupy(id: int) -> void:
+	occupied = true
+	character_id = id
+	is_ferret = false
+	caught = false
+	_refresh()
+
+func vacate() -> void:
+	occupied = false
+	character_id = -1
+	is_ferret = false
+	caught = false
 	_refresh()
 
 func set_ferret(on: bool) -> void:
@@ -31,6 +49,7 @@ func reset() -> void:
 	_refresh()
 
 func _refresh() -> void:
+	visible = occupied
 	if tell:
 		tell.visible = is_ferret and not caught
 	if caught_mark:

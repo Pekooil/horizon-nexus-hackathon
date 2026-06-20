@@ -7,6 +7,7 @@ signal money_changed(amount: float)
 signal night_changed(night: int)
 signal clock_changed(text: String)
 signal photos_changed(count: int)
+signal hour_changed(hour: int)
 signal game_over(won: bool)
 
 const MAX_NIGHTS := 5
@@ -26,6 +27,7 @@ var night_time_left := NIGHT_DURATION
 var photos_left := PHOTOS_PER_NIGHT
 var running := false
 var active_ferrets: Array = []        # CasinoPlayer nodes currently cheating
+var _last_hour := 0
 
 func start_game() -> void:
 	money = START_MONEY
@@ -37,6 +39,7 @@ func _begin_night() -> void:
 	photos_left = PHOTOS_PER_NIGHT
 	active_ferrets.clear()
 	running = true
+	_last_hour = 0
 	emit_signal("night_changed", current_night)
 	emit_signal("money_changed", money)
 	emit_signal("clock_changed", _format_clock())
@@ -64,6 +67,11 @@ func _process(delta: float) -> void:
 	emit_signal("money_changed", money)
 	emit_signal("clock_changed", _format_clock())
 
+	var hour := mini(int((NIGHT_DURATION - night_time_left) / SECONDS_PER_HOUR), NIGHT_HOURS)
+	if hour != _last_hour:
+		_last_hour = hour
+		emit_signal("hour_changed", hour)
+
 	if money <= 0.0:
 		money = 0.0
 		emit_signal("money_changed", money)
@@ -85,6 +93,12 @@ func _end_night() -> void:
 func register_ferret(npc) -> void:
 	if npc not in active_ferrets:
 		active_ferrets.append(npc)
+
+## Re-points active_ferrets at a ferret's new seat after they move rooms.
+func transfer_ferret(old_npc, new_npc) -> void:
+	active_ferrets.erase(old_npc)
+	if new_npc not in active_ferrets:
+		active_ferrets.append(new_npc)
 
 func catch_ferret(npc) -> void:
 	active_ferrets.erase(npc)
