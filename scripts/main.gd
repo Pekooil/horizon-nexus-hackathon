@@ -7,11 +7,25 @@ const FEED_RENDER_SIZE := Vector2i(960, 540)
 const ROOM_BASE_SIZE := Vector2(480.0, 270.0)
 const ROOM_SCENE := preload("res://scenes/Room.tscn")
 const MonitorQuad = preload("res://scripts/monitor_quad.gd")
+const MONEY_SYMBOL_TEXTURE := preload("res://assets/money_digits/money.png")
+const MONEY_DOT_TEXTURE := preload("res://assets/money_digits/dot.png")
+const MONEY_DIGIT_TEXTURES := {
+	"0": preload("res://assets/money_digits/0.png"),
+	"1": preload("res://assets/money_digits/1.png"),
+	"2": preload("res://assets/money_digits/2.png"),
+	"3": preload("res://assets/money_digits/3.png"),
+	"4": preload("res://assets/money_digits/4.png"),
+	"5": preload("res://assets/money_digits/5.png"),
+	"6": preload("res://assets/money_digits/6.png"),
+	"7": preload("res://assets/money_digits/7.png"),
+	"8": preload("res://assets/money_digits/8.png"),
+	"9": preload("res://assets/money_digits/9.png"),
+}
 
 # Monitor-wall nodes that live in Main.tscn (edit them in the editor):
 @onready var monitor_screen: Control = $MonitorScreen
 @onready var screen_layout: Node2D = $MonitorScreen/WallCenter/ScreenLayout
-@onready var money_label: Label = $MonitorScreen/TopBar/Money
+@onready var money_display: HBoxContainer = $MonitorScreen/Money
 @onready var night_label: Label = $MonitorScreen/TopBar/Night
 @onready var clock_label: Label = $MonitorScreen/TopBar/Clock
 @onready var photos_label: Label = $MonitorScreen/TopBar/Photos
@@ -29,12 +43,14 @@ var flash: ColorRect
 var overlay: Control
 var overlay_label: Label
 
+var money_sprites: Array[TextureRect] = []
 var current_detail := -1
 var spawn_timer := 4.0
 
 func _ready() -> void:
 	_build_feeds()
 	_bind_monitors()
+	_build_money_display()
 	_style_hud()
 	_build_detail_view()
 	_build_banner()
@@ -103,8 +119,15 @@ func _bind_monitors() -> void:
 		screen.set_feed_texture(feeds[i].get_texture())
 
 func _style_hud() -> void:
-	for l in [money_label, night_label, clock_label, photos_label]:
+	for l in [night_label, clock_label, photos_label]:
 		l.add_theme_font_size_override("font_size", 24)
+
+func _build_money_display() -> void:
+	money_sprites.clear()
+
+	for child in money_display.get_children():
+		if child is TextureRect:
+			money_sprites.append(child)
 
 func _build_detail_view() -> void:
 	detail_view = Control.new()
@@ -243,9 +266,20 @@ func _take_photo() -> void:
 # --- signal handlers --------------------------------------------------------
 
 func _on_money_changed(amount: float) -> void:
-	money_label.text = "$%d" % int(amount)
-	money_label.add_theme_color_override(
-		"font_color", Color(1, 0.4, 0.4) if amount < 250 else Color(0.7, 1, 0.7))
+	var value := maxi(int(round(amount)), 0)
+	var digits := "%06d" % value
+	var money_chars := [
+		MONEY_SYMBOL_TEXTURE,
+		MONEY_DIGIT_TEXTURES[digits.substr(0, 1)],
+		MONEY_DIGIT_TEXTURES[digits.substr(1, 1)],
+		MONEY_DIGIT_TEXTURES[digits.substr(2, 1)],
+		MONEY_DOT_TEXTURE,
+		MONEY_DIGIT_TEXTURES[digits.substr(3, 1)],
+		MONEY_DIGIT_TEXTURES[digits.substr(4, 1)],
+		MONEY_DIGIT_TEXTURES[digits.substr(5, 1)],
+	]
+	for i in money_sprites.size():
+		money_sprites[i].texture = money_chars[i]
 
 func _on_night_changed(night: int) -> void:
 	night_label.text = "Night %d / %d" % [night, GameManager.MAX_NIGHTS]

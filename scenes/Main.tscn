@@ -4,8 +4,11 @@
 [ext_resource type="Texture2D" uid="uid://cmp0oobgrrw0d" path="res://assets/ferret-casino.png" id="2_bg"]
 [ext_resource type="Script" uid="uid://dg2x3ltxbwroa" path="res://scripts/monitor_quad.gd" id="3_monitor"]
 [ext_resource type="Texture2D" uid="uid://dvveouwoxdhdv" path="res://assets/ferret-guard.png" id="4_guard"]
+[ext_resource type="Texture2D" uid="uid://nrhtaw0bdu2" path="res://assets/money_digits/money.png" id="5_money"]
+[ext_resource type="Texture2D" uid="uid://dnvcgssx3q5k5" path="res://assets/money_digits/0.png" id="6_zero"]
+[ext_resource type="Texture2D" uid="uid://cgggx3nysqkhg" path="res://assets/money_digits/dot.png" id="7_dot"]
 
-[sub_resource type="ArrayMesh" id="ArrayMesh_rarhs"]
+[sub_resource type="ArrayMesh" id="ArrayMesh_nxtc6"]
 _surfaces = [{
 "aabb": AABB(434, 290, 0, 312, 219, 1e-05),
 "attribute_data": PackedByteArray(0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 128, 63, 0, 0, 0, 0, 0, 0, 128, 63, 0, 0, 128, 63, 0, 0, 0, 0, 0, 0, 128, 63),
@@ -18,7 +21,7 @@ _surfaces = [{
 "vertex_data": PackedByteArray(0, 128, 217, 67, 0, 128, 177, 67, 0, 0, 0, 0, 0, 128, 58, 68, 0, 0, 145, 67, 0, 0, 0, 0, 0, 64, 56, 68, 0, 0, 225, 67, 0, 0, 0, 0, 0, 0, 217, 67, 0, 128, 254, 67, 0, 0, 0, 0)
 }]
 
-[sub_resource type="ArrayMesh" id="ArrayMesh_vcsgt"]
+[sub_resource type="ArrayMesh" id="ArrayMesh_jlsqs"]
 _surfaces = [{
 "aabb": AABB(748, 281, 0, 356, 161, 1e-05),
 "attribute_data": PackedByteArray(0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 128, 63, 0, 0, 0, 0, 0, 0, 128, 63, 0, 0, 128, 63, 0, 0, 0, 0, 0, 0, 128, 63),
@@ -31,7 +34,7 @@ _surfaces = [{
 "vertex_data": PackedByteArray(0, 0, 59, 68, 0, 128, 140, 67, 0, 0, 0, 0, 0, 0, 138, 68, 0, 128, 140, 67, 0, 0, 0, 0, 0, 32, 135, 68, 0, 0, 221, 67, 0, 0, 0, 0, 0, 192, 64, 68, 0, 0, 221, 67, 0, 0, 0, 0)
 }]
 
-[sub_resource type="ArrayMesh" id="ArrayMesh_c01mt"]
+[sub_resource type="ArrayMesh" id="ArrayMesh_q8u5g"]
 _surfaces = [{
 "aabb": AABB(1108, 293, 0, 310, 223, 1e-05),
 "attribute_data": PackedByteArray(0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 128, 63, 0, 0, 0, 0, 0, 0, 128, 63, 0, 0, 128, 63, 0, 0, 0, 0, 0, 0, 128, 63),
@@ -44,7 +47,7 @@ _surfaces = [{
 "vertex_data": PackedByteArray(0, 128, 138, 68, 0, 128, 146, 67, 0, 0, 0, 0, 0, 96, 176, 68, 0, 128, 168, 67, 0, 0, 0, 0, 0, 64, 177, 68, 0, 0, 1, 68, 0, 0, 0, 0, 0, 32, 139, 68, 0, 0, 224, 67, 0, 0, 0, 0)
 }]
 
-[sub_resource type="ArrayMesh" id="ArrayMesh_nxtc6"]
+[sub_resource type="ArrayMesh" id="ArrayMesh_lhr70"]
 _surfaces = [{
 "aabb": AABB(449, 459, 0, 312, 237, 1e-05),
 "attribute_data": PackedByteArray(0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 128, 63, 0, 0, 0, 0, 0, 0, 128, 63, 0, 0, 128, 63, 0, 0, 0, 0, 0, 0, 128, 63),
@@ -57,7 +60,7 @@ _surfaces = [{
 "vertex_data": PackedByteArray(0, 128, 224, 67, 0, 0, 2, 68, 0, 0, 0, 0, 0, 64, 62, 68, 0, 128, 229, 67, 0, 0, 0, 0, 0, 64, 62, 68, 0, 128, 30, 68, 0, 0, 0, 0, 0, 128, 224, 67, 0, 0, 46, 68, 0, 0, 0, 0)
 }]
 
-[sub_resource type="ArrayMesh" id="ArrayMesh_jlsqs"]
+[sub_resource type="ArrayMesh" id="ArrayMesh_wp0k4"]
 _surfaces = [{
 "aabb": AABB(771, 459, 0, 311, 175, 1e-05),
 "attribute_data": PackedByteArray(0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 128, 63, 0, 0, 0, 0, 0, 0, 128, 63, 0, 0, 128, 63, 0, 0, 0, 0, 0, 0, 128, 63),
@@ -70,7 +73,7 @@ _surfaces = [{
 "vertex_data": PackedByteArray(0, 192, 64, 68, 0, 128, 229, 67, 0, 0, 0, 0, 0, 64, 135, 68, 0, 128, 229, 67, 0, 0, 0, 0, 0, 64, 135, 68, 0, 128, 30, 68, 0, 0, 0, 0, 0, 192, 64, 68, 0, 128, 30, 68, 0, 0, 0, 0)
 }]
 
-[sub_resource type="ArrayMesh" id="ArrayMesh_q8u5g"]
+[sub_resource type="ArrayMesh" id="ArrayMesh_bjd11"]
 _surfaces = [{
 "aabb": AABB(1093, 460, 0, 312, 236, 1e-05),
 "attribute_data": PackedByteArray(0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 128, 63, 0, 0, 0, 0, 0, 0, 128, 63, 0, 0, 128, 63, 0, 0, 0, 0, 0, 0, 128, 63),
@@ -133,6 +136,71 @@ theme_override_colors/font_color = Color(0.85, 0.3, 0.3, 1)
 text = "● CASINO SECURITY — LIVE FEEDS"
 horizontal_alignment = 1
 
+[node name="Money" type="HBoxContainer" parent="MonitorScreen" unique_id=1503927125]
+layout_mode = 0
+offset_left = 1367.0
+offset_top = 164.0
+offset_right = 1581.0
+offset_bottom = 202.0
+scale = Vector2(1.830562, 1.830562)
+theme_override_constants/separation = 2
+
+[node name="Symbol" type="TextureRect" parent="MonitorScreen/Money" unique_id=123056045]
+custom_minimum_size = Vector2(26, 38)
+layout_mode = 2
+texture = ExtResource("5_money")
+expand_mode = 1
+stretch_mode = 5
+
+[node name="Digit0" type="TextureRect" parent="MonitorScreen/Money" unique_id=930212875]
+custom_minimum_size = Vector2(26, 38)
+layout_mode = 2
+texture = ExtResource("6_zero")
+expand_mode = 1
+stretch_mode = 5
+
+[node name="Digit1" type="TextureRect" parent="MonitorScreen/Money" unique_id=1214451197]
+custom_minimum_size = Vector2(26, 38)
+layout_mode = 2
+texture = ExtResource("6_zero")
+expand_mode = 1
+stretch_mode = 5
+
+[node name="Digit2" type="TextureRect" parent="MonitorScreen/Money" unique_id=1395460789]
+custom_minimum_size = Vector2(26, 38)
+layout_mode = 2
+texture = ExtResource("6_zero")
+expand_mode = 1
+stretch_mode = 5
+
+[node name="Dot" type="TextureRect" parent="MonitorScreen/Money" unique_id=1920811375]
+custom_minimum_size = Vector2(18, 38)
+layout_mode = 2
+texture = ExtResource("7_dot")
+expand_mode = 1
+stretch_mode = 5
+
+[node name="Digit3" type="TextureRect" parent="MonitorScreen/Money" unique_id=1675654972]
+custom_minimum_size = Vector2(26, 38)
+layout_mode = 2
+texture = ExtResource("6_zero")
+expand_mode = 1
+stretch_mode = 5
+
+[node name="Digit4" type="TextureRect" parent="MonitorScreen/Money" unique_id=1150652078]
+custom_minimum_size = Vector2(26, 38)
+layout_mode = 2
+texture = ExtResource("6_zero")
+expand_mode = 1
+stretch_mode = 5
+
+[node name="Digit5" type="TextureRect" parent="MonitorScreen/Money" unique_id=1714662892]
+custom_minimum_size = Vector2(26, 38)
+layout_mode = 2
+texture = ExtResource("6_zero")
+expand_mode = 1
+stretch_mode = 5
+
 [node name="TopBar" type="HBoxContainer" parent="MonitorScreen" unique_id=1028472448]
 layout_mode = 1
 anchors_preset = 10
@@ -143,10 +211,6 @@ grow_horizontal = 2
 theme_override_constants/separation = 60
 alignment = 1
 
-[node name="Money" type="Label" parent="MonitorScreen/TopBar" unique_id=1503927125]
-layout_mode = 2
-text = "$1000"
-
 [node name="Night" type="Label" parent="MonitorScreen/TopBar" unique_id=1496309158]
 layout_mode = 2
 text = "Night 1 / 5"
@@ -155,7 +219,7 @@ text = "Night 1 / 5"
 layout_mode = 2
 text = "12:00 AM"
 
-[node name="Photos" type="Label" parent="MonitorScreen/TopBar"]
+[node name="Photos" type="Label" parent="MonitorScreen/TopBar" unique_id=121416442]
 layout_mode = 2
 text = "Photos: 5"
 
@@ -178,7 +242,7 @@ color = Color(0.2, 0.9, 1, 0.18)
 polygon = PackedVector2Array(435, 355, 746, 290, 737, 450, 434, 509)
 
 [node name="Surface" type="MeshInstance2D" parent="MonitorScreen/WallCenter/ScreenLayout/Screen0" unique_id=1423540439]
-mesh = SubResource("ArrayMesh_rarhs")
+mesh = SubResource("ArrayMesh_nxtc6")
 
 [node name="Hitbox" type="Area2D" parent="MonitorScreen/WallCenter/ScreenLayout/Screen0" unique_id=1223570285]
 
@@ -193,7 +257,7 @@ color = Color(0.2, 0.9, 1, 0.18)
 polygon = PackedVector2Array(748, 281, 1104, 281, 1081, 442, 771, 442)
 
 [node name="Surface" type="MeshInstance2D" parent="MonitorScreen/WallCenter/ScreenLayout/Screen1" unique_id=1067620408]
-mesh = SubResource("ArrayMesh_vcsgt")
+mesh = SubResource("ArrayMesh_jlsqs")
 
 [node name="Hitbox" type="Area2D" parent="MonitorScreen/WallCenter/ScreenLayout/Screen1" unique_id=794872546]
 
@@ -208,7 +272,7 @@ color = Color(0.2, 0.9, 1, 0.18)
 polygon = PackedVector2Array(1108, 293, 1411, 337, 1418, 516, 1113, 448)
 
 [node name="Surface" type="MeshInstance2D" parent="MonitorScreen/WallCenter/ScreenLayout/Screen2" unique_id=1261085965]
-mesh = SubResource("ArrayMesh_c01mt")
+mesh = SubResource("ArrayMesh_q8u5g")
 
 [node name="Hitbox" type="Area2D" parent="MonitorScreen/WallCenter/ScreenLayout/Screen2" unique_id=1023373754]
 
@@ -223,7 +287,7 @@ color = Color(0.2, 0.9, 1, 0.18)
 polygon = PackedVector2Array(449, 520, 761, 459, 761, 634, 449, 696)
 
 [node name="Surface" type="MeshInstance2D" parent="MonitorScreen/WallCenter/ScreenLayout/Screen3" unique_id=860430615]
-mesh = SubResource("ArrayMesh_nxtc6")
+mesh = SubResource("ArrayMesh_lhr70")
 
 [node name="Hitbox" type="Area2D" parent="MonitorScreen/WallCenter/ScreenLayout/Screen3" unique_id=526051854]
 
@@ -238,7 +302,7 @@ color = Color(0.2, 0.9, 1, 0.18)
 polygon = PackedVector2Array(771, 459, 1082, 459, 1082, 634, 771, 634)
 
 [node name="Surface" type="MeshInstance2D" parent="MonitorScreen/WallCenter/ScreenLayout/Screen4" unique_id=1586514954]
-mesh = SubResource("ArrayMesh_jlsqs")
+mesh = SubResource("ArrayMesh_wp0k4")
 
 [node name="Hitbox" type="Area2D" parent="MonitorScreen/WallCenter/ScreenLayout/Screen4" unique_id=36284508]
 
@@ -253,7 +317,7 @@ color = Color(0.2, 0.9, 1, 0.18)
 polygon = PackedVector2Array(1093, 460, 1405, 520, 1405, 696, 1093, 632)
 
 [node name="Surface" type="MeshInstance2D" parent="MonitorScreen/WallCenter/ScreenLayout/Screen5" unique_id=933660816]
-mesh = SubResource("ArrayMesh_q8u5g")
+mesh = SubResource("ArrayMesh_bjd11")
 
 [node name="Hitbox" type="Area2D" parent="MonitorScreen/WallCenter/ScreenLayout/Screen5" unique_id=2049274840]
 
