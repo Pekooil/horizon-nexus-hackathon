@@ -4,7 +4,9 @@ extends Control
 
 const ROOM_COUNT := 6
 const FEED_RENDER_SIZE := Vector2i(960, 540)
+const ROOM_BASE_SIZE := Vector2(480.0, 270.0)
 const ROOM_SCENE := preload("res://scenes/Room.tscn")
+const MonitorQuad = preload("res://scripts/monitor_quad.gd")
 
 # Monitor-wall nodes that live in Main.tscn (edit them in the editor):
 @onready var monitor_screen: Control = $MonitorScreen
@@ -47,6 +49,19 @@ func _ready() -> void:
 
 	GameManager.start_game()
 
+func _unhandled_input(event: InputEvent) -> void:
+	if detail_view != null and detail_view.visible:
+		return
+
+	if event is InputEventMouseMotion:
+		var hovered_screen := _get_screen_at_point(event.position)
+		mouse_default_cursor_shape = CURSOR_POINTING_HAND if hovered_screen >= 0 else CURSOR_ARROW
+	elif event is InputEventMouseButton and event.pressed and event.button_index == MOUSE_BUTTON_LEFT:
+		var clicked_screen := _get_screen_at_point(event.position)
+		if clicked_screen >= 0:
+			_open_detail(clicked_screen)
+			get_viewport().set_input_as_handled()
+
 func _process(delta: float) -> void:
 	if not GameManager.running:
 		return
@@ -71,39 +86,21 @@ func _build_feeds() -> void:
 
 		var room := ROOM_SCENE.instantiate() as Room
 		room.room_id = i + 1        # set before add_child so _ready() sees it
+		room.scale = Vector2(
+			FEED_RENDER_SIZE.x / ROOM_BASE_SIZE.x,
+			FEED_RENDER_SIZE.y / ROOM_BASE_SIZE.y,
+		)
 		vp.add_child(room)
 
 		feeds.append(vp)
 		rooms.append(room)
 
 func _bind_monitors() -> void:
-	# Each screen is an editable 4-point Polygon2D with a matching click hitbox.
-	var feed_uvs := PackedVector2Array([
-		Vector2(0, 0),
-		Vector2(FEED_RENDER_SIZE.x, 0),
-		Vector2(FEED_RENDER_SIZE.x, FEED_RENDER_SIZE.y),
-		Vector2(0, FEED_RENDER_SIZE.y),
-	])
 	for i in ROOM_COUNT:
-		var screen := screen_layout.get_node_or_null("Screen%d" % i) as Node2D
+		var screen := screen_layout.get_node_or_null("Screen%d" % i) as MonitorQuad
 		if screen == null or i >= feeds.size():
 			continue
-		var surface := screen.get_node("Surface") as Polygon2D
-		var hitbox := screen.get_node("Hitbox") as Area2D
-		var collision := hitbox.get_node("CollisionPolygon2D") as CollisionPolygon2D
-		if surface == null or hitbox == null or collision == null:
-			continue
-
-		surface.texture = feeds[i].get_texture()
-		surface.uv = feed_uvs
-		collision.polygon = surface.polygon
-		hitbox.input_pickable = true
-		if not hitbox.input_event.is_connected(_on_screen_hit):
-			hitbox.input_event.connect(_on_screen_hit.bind(i))
-
-func _on_screen_hit(_viewport: Node, event: InputEvent, _shape_idx: int, screen_idx: int) -> void:
-	if event is InputEventMouseButton and event.pressed and event.button_index == MOUSE_BUTTON_LEFT:
-		_open_detail(screen_idx)
+		screen.set_feed_texture(feeds[i].get_texture())
 
 func _style_hud() -> void:
 	for l in [money_label, night_label, clock_label, photos_label]:
@@ -224,6 +221,7 @@ func _open_detail(i: int) -> void:
 func _close_detail() -> void:
 	detail_view.visible = false
 	monitor_screen.visible = true
+	mouse_default_cursor_shape = CURSOR_ARROW
 	current_detail = -1
 
 func _take_photo() -> void:
@@ -293,3 +291,10 @@ func _show_banner(text: String) -> void:
 	t.tween_interval(1.2)
 	t.tween_property(banner, "modulate:a", 0.0, 0.6)
 	t.tween_callback(func(): banner.visible = false)
+
+func _get_screen_at_point(point: Vector2) -> int:
+	for i in range(ROOM_COUNT - 1, -1, -1):
+		var screen := screen_layout.get_node_or_null("Screen%d" % i) as MonitorQuad
+		if screen != null and screen.contains_global_point(point):
+			return i
+	return -1

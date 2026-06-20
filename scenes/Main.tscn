@@ -2,6 +2,86 @@
 
 [ext_resource type="Script" uid="uid://dlutnkk6nsx0h" path="res://scripts/main.gd" id="1_main"]
 [ext_resource type="Texture2D" uid="uid://cmp0oobgrrw0d" path="res://assets/ferret-casino.png" id="2_bg"]
+[ext_resource type="Script" uid="uid://dg2x3ltxbwroa" path="res://scripts/monitor_quad.gd" id="3_monitor"]
+[ext_resource type="Texture2D" uid="uid://dvveouwoxdhdv" path="res://assets/ferret-guard.png" id="4_guard"]
+
+[sub_resource type="ArrayMesh" id="ArrayMesh_rarhs"]
+_surfaces = [{
+"aabb": AABB(434, 290, 0, 312, 219, 1e-05),
+"attribute_data": PackedByteArray(0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 128, 63, 0, 0, 0, 0, 0, 0, 128, 63, 0, 0, 128, 63, 0, 0, 0, 0, 0, 0, 128, 63),
+"format": 34359742481,
+"index_count": 6,
+"index_data": PackedByteArray(0, 0, 1, 0, 2, 0, 0, 0, 2, 0, 3, 0),
+"primitive": 3,
+"uv_scale": Vector4(0, 0, 0, 0),
+"vertex_count": 4,
+"vertex_data": PackedByteArray(0, 128, 217, 67, 0, 128, 177, 67, 0, 0, 0, 0, 0, 128, 58, 68, 0, 0, 145, 67, 0, 0, 0, 0, 0, 64, 56, 68, 0, 0, 225, 67, 0, 0, 0, 0, 0, 0, 217, 67, 0, 128, 254, 67, 0, 0, 0, 0)
+}]
+
+[sub_resource type="ArrayMesh" id="ArrayMesh_vcsgt"]
+_surfaces = [{
+"aabb": AABB(748, 281, 0, 356, 161, 1e-05),
+"attribute_data": PackedByteArray(0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 128, 63, 0, 0, 0, 0, 0, 0, 128, 63, 0, 0, 128, 63, 0, 0, 0, 0, 0, 0, 128, 63),
+"format": 34359742481,
+"index_count": 6,
+"index_data": PackedByteArray(0, 0, 1, 0, 2, 0, 0, 0, 2, 0, 3, 0),
+"primitive": 3,
+"uv_scale": Vector4(0, 0, 0, 0),
+"vertex_count": 4,
+"vertex_data": PackedByteArray(0, 0, 59, 68, 0, 128, 140, 67, 0, 0, 0, 0, 0, 0, 138, 68, 0, 128, 140, 67, 0, 0, 0, 0, 0, 32, 135, 68, 0, 0, 221, 67, 0, 0, 0, 0, 0, 192, 64, 68, 0, 0, 221, 67, 0, 0, 0, 0)
+}]
+
+[sub_resource type="ArrayMesh" id="ArrayMesh_c01mt"]
+_surfaces = [{
+"aabb": AABB(1108, 293, 0, 310, 223, 1e-05),
+"attribute_data": PackedByteArray(0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 128, 63, 0, 0, 0, 0, 0, 0, 128, 63, 0, 0, 128, 63, 0, 0, 0, 0, 0, 0, 128, 63),
+"format": 34359742481,
+"index_count": 6,
+"index_data": PackedByteArray(0, 0, 1, 0, 2, 0, 0, 0, 2, 0, 3, 0),
+"primitive": 3,
+"uv_scale": Vector4(0, 0, 0, 0),
+"vertex_count": 4,
+"vertex_data": PackedByteArray(0, 128, 138, 68, 0, 128, 146, 67, 0, 0, 0, 0, 0, 96, 176, 68, 0, 128, 168, 67, 0, 0, 0, 0, 0, 64, 177, 68, 0, 0, 1, 68, 0, 0, 0, 0, 0, 32, 139, 68, 0, 0, 224, 67, 0, 0, 0, 0)
+}]
+
+[sub_resource type="ArrayMesh" id="ArrayMesh_nxtc6"]
+_surfaces = [{
+"aabb": AABB(449, 459, 0, 312, 237, 1e-05),
+"attribute_data": PackedByteArray(0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 128, 63, 0, 0, 0, 0, 0, 0, 128, 63, 0, 0, 128, 63, 0, 0, 0, 0, 0, 0, 128, 63),
+"format": 34359742481,
+"index_count": 6,
+"index_data": PackedByteArray(0, 0, 1, 0, 2, 0, 0, 0, 2, 0, 3, 0),
+"primitive": 3,
+"uv_scale": Vector4(0, 0, 0, 0),
+"vertex_count": 4,
+"vertex_data": PackedByteArray(0, 128, 224, 67, 0, 0, 2, 68, 0, 0, 0, 0, 0, 64, 62, 68, 0, 128, 229, 67, 0, 0, 0, 0, 0, 64, 62, 68, 0, 128, 30, 68, 0, 0, 0, 0, 0, 128, 224, 67, 0, 0, 46, 68, 0, 0, 0, 0)
+}]
+
+[sub_resource type="ArrayMesh" id="ArrayMesh_jlsqs"]
+_surfaces = [{
+"aabb": AABB(771, 459, 0, 311, 175, 1e-05),
+"attribute_data": PackedByteArray(0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 128, 63, 0, 0, 0, 0, 0, 0, 128, 63, 0, 0, 128, 63, 0, 0, 0, 0, 0, 0, 128, 63),
+"format": 34359742481,
+"index_count": 6,
+"index_data": PackedByteArray(0, 0, 1, 0, 2, 0, 0, 0, 2, 0, 3, 0),
+"primitive": 3,
+"uv_scale": Vector4(0, 0, 0, 0),
+"vertex_count": 4,
+"vertex_data": PackedByteArray(0, 192, 64, 68, 0, 128, 229, 67, 0, 0, 0, 0, 0, 64, 135, 68, 0, 128, 229, 67, 0, 0, 0, 0, 0, 64, 135, 68, 0, 128, 30, 68, 0, 0, 0, 0, 0, 192, 64, 68, 0, 128, 30, 68, 0, 0, 0, 0)
+}]
+
+[sub_resource type="ArrayMesh" id="ArrayMesh_q8u5g"]
+_surfaces = [{
+"aabb": AABB(1093, 460, 0, 312, 236, 1e-05),
+"attribute_data": PackedByteArray(0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 128, 63, 0, 0, 0, 0, 0, 0, 128, 63, 0, 0, 128, 63, 0, 0, 0, 0, 0, 0, 128, 63),
+"format": 34359742481,
+"index_count": 6,
+"index_data": PackedByteArray(0, 0, 1, 0, 2, 0, 0, 0, 2, 0, 3, 0),
+"primitive": 3,
+"uv_scale": Vector4(0, 0, 0, 0),
+"vertex_count": 4,
+"vertex_data": PackedByteArray(0, 160, 136, 68, 0, 0, 230, 67, 0, 0, 0, 0, 0, 160, 175, 68, 0, 0, 2, 68, 0, 0, 0, 0, 0, 160, 175, 68, 0, 0, 46, 68, 0, 0, 0, 0, 0, 160, 136, 68, 0, 0, 30, 68, 0, 0, 0, 0)
+}]
 
 [node name="Main" type="Control" unique_id=1404050625]
 layout_mode = 3
@@ -89,94 +169,104 @@ grow_horizontal = 2
 grow_vertical = 2
 
 [node name="ScreenLayout" type="Node2D" parent="MonitorScreen/WallCenter" unique_id=1953222979]
-position = Vector2(314, 209)
 
 [node name="Screen0" type="Node2D" parent="MonitorScreen/WallCenter/ScreenLayout" unique_id=1249736816]
-position = Vector2(-48, -33)
+script = ExtResource("3_monitor")
 
-[node name="Surface" type="Polygon2D" parent="MonitorScreen/WallCenter/ScreenLayout/Screen0" unique_id=1049081075]
-position = Vector2(-337.94998, -183.25)
-scale = Vector2(1.5, 1.5)
-polygon = PackedVector2Array(345, 242, 547, 199, 540, 305, 338, 344)
+[node name="Guide" type="Polygon2D" parent="MonitorScreen/WallCenter/ScreenLayout/Screen0" unique_id=330350351]
+color = Color(0.2, 0.9, 1, 0.18)
+polygon = PackedVector2Array(435, 355, 746, 290, 737, 450, 434, 509)
+
+[node name="Surface" type="MeshInstance2D" parent="MonitorScreen/WallCenter/ScreenLayout/Screen0" unique_id=1423540439]
+mesh = SubResource("ArrayMesh_rarhs")
 
 [node name="Hitbox" type="Area2D" parent="MonitorScreen/WallCenter/ScreenLayout/Screen0" unique_id=1223570285]
 
 [node name="CollisionPolygon2D" type="CollisionPolygon2D" parent="MonitorScreen/WallCenter/ScreenLayout/Screen0/Hitbox" unique_id=1109076066]
-position = Vector2(-337.94998, -183.25)
-scale = Vector2(1.5, 1.5)
-polygon = PackedVector2Array(345, 242, 547, 199, 540, 305, 338, 344)
+polygon = PackedVector2Array(435, 355, 746, 290, 737, 450, 434, 509)
 
 [node name="Screen1" type="Node2D" parent="MonitorScreen/WallCenter/ScreenLayout" unique_id=1696400789]
-position = Vector2(-92, 87)
+script = ExtResource("3_monitor")
 
-[node name="Surface" type="Polygon2D" parent="MonitorScreen/WallCenter/ScreenLayout/Screen1" unique_id=2103608477]
-position = Vector2(-358.94998, -123.399994)
-scale = Vector2(1.5, 1.5)
-polygon = PackedVector2Array(589.3, 72.26666, 827.9667, 71.59999, 812.63336, 180.26666, 604.63336, 180.26666)
+[node name="Guide" type="Polygon2D" parent="MonitorScreen/WallCenter/ScreenLayout/Screen1" unique_id=2085174206]
+color = Color(0.2, 0.9, 1, 0.18)
+polygon = PackedVector2Array(748, 281, 1104, 281, 1081, 442, 771, 442)
+
+[node name="Surface" type="MeshInstance2D" parent="MonitorScreen/WallCenter/ScreenLayout/Screen1" unique_id=1067620408]
+mesh = SubResource("ArrayMesh_vcsgt")
 
 [node name="Hitbox" type="Area2D" parent="MonitorScreen/WallCenter/ScreenLayout/Screen1" unique_id=794872546]
 
 [node name="CollisionPolygon2D" type="CollisionPolygon2D" parent="MonitorScreen/WallCenter/ScreenLayout/Screen1/Hitbox" unique_id=338232243]
-position = Vector2(-349, -123)
-scale = Vector2(1.5, 1.5)
-polygon = PackedVector2Array(582.6667, 72, 821.3334, 71.33333, 806.00006, 180, 598, 180)
+polygon = PackedVector2Array(748, 281, 1104, 281, 1081, 442, 771, 442)
 
 [node name="Screen2" type="Node2D" parent="MonitorScreen/WallCenter/ScreenLayout" unique_id=521819988]
-position = Vector2(-193, 83)
+script = ExtResource("3_monitor")
 
-[node name="Surface" type="Polygon2D" parent="MonitorScreen/WallCenter/ScreenLayout/Screen2" unique_id=664923658]
-position = Vector2(-411.44998, -126)
-scale = Vector2(1.5, 1.5)
-polygon = PackedVector2Array(929.6333, 83.33333, 1133.6333, 114.000015, 1138.3, 234.00002, 934.9667, 190.66667)
+[node name="Guide" type="Polygon2D" parent="MonitorScreen/WallCenter/ScreenLayout/Screen2" unique_id=1746097254]
+color = Color(0.2, 0.9, 1, 0.18)
+polygon = PackedVector2Array(1108, 293, 1411, 337, 1418, 516, 1113, 448)
+
+[node name="Surface" type="MeshInstance2D" parent="MonitorScreen/WallCenter/ScreenLayout/Screen2" unique_id=1261085965]
+mesh = SubResource("ArrayMesh_c01mt")
 
 [node name="Hitbox" type="Area2D" parent="MonitorScreen/WallCenter/ScreenLayout/Screen2" unique_id=1023373754]
 
 [node name="CollisionPolygon2D" type="CollisionPolygon2D" parent="MonitorScreen/WallCenter/ScreenLayout/Screen2/Hitbox" unique_id=859415569]
-position = Vector2(-408.00003, -122)
-scale = Vector2(1.5, 1.5)
-polygon = PackedVector2Array(927.3334, 80.66666, 1131.3334, 111.33334, 1136, 231.33334, 932.66675, 188)
+polygon = PackedVector2Array(1108, 293, 1411, 337, 1418, 516, 1113, 448)
 
 [node name="Screen3" type="Node2D" parent="MonitorScreen/WallCenter/ScreenLayout" unique_id=1067765556]
-position = Vector2(-96, 137)
+script = ExtResource("3_monitor")
 
-[node name="Surface" type="Polygon2D" parent="MonitorScreen/WallCenter/ScreenLayout/Screen3" unique_id=91392271]
-position = Vector2(-361, -99)
-scale = Vector2(1.5, 1.5)
-polygon = PackedVector2Array(394.23337, 182.63336, 602.6667, 141.33333, 602.6667, 258.6667, 394.23337, 300.63336)
+[node name="Guide" type="Polygon2D" parent="MonitorScreen/WallCenter/ScreenLayout/Screen3" unique_id=94634584]
+color = Color(0.2, 0.9, 1, 0.18)
+polygon = PackedVector2Array(449, 520, 761, 459, 761, 634, 449, 696)
+
+[node name="Surface" type="MeshInstance2D" parent="MonitorScreen/WallCenter/ScreenLayout/Screen3" unique_id=860430615]
+mesh = SubResource("ArrayMesh_nxtc6")
 
 [node name="Hitbox" type="Area2D" parent="MonitorScreen/WallCenter/ScreenLayout/Screen3" unique_id=526051854]
 
 [node name="CollisionPolygon2D" type="CollisionPolygon2D" parent="MonitorScreen/WallCenter/ScreenLayout/Screen3/Hitbox" unique_id=529755857]
-position = Vector2(-377.40002, -81.95001)
-scale = Vector2(1.5, 1.5)
-polygon = PackedVector2Array(404.93338, 170.63336, 613.60004, 129.96667, 613.60004, 247.30002, 404.93338, 288.63336)
+polygon = PackedVector2Array(449, 520, 761, 459, 761, 634, 449, 696)
 
 [node name="Screen4" type="Node2D" parent="MonitorScreen/WallCenter/ScreenLayout" unique_id=2114295064]
-position = Vector2(-111, 98)
+script = ExtResource("3_monitor")
 
-[node name="Surface" type="Polygon2D" parent="MonitorScreen/WallCenter/ScreenLayout/Screen4" unique_id=1143149573]
-position = Vector2(-370.94998, -117.400024)
-scale = Vector2(1.5, 1.5)
-polygon = PackedVector2Array(625.30005, 178.93335, 833.9667, 178.93335, 833.9667, 296.2667, 625.30005, 296.2667)
+[node name="Guide" type="Polygon2D" parent="MonitorScreen/WallCenter/ScreenLayout/Screen4" unique_id=219959015]
+color = Color(0.2, 0.9, 1, 0.18)
+polygon = PackedVector2Array(771, 459, 1082, 459, 1082, 634, 771, 634)
+
+[node name="Surface" type="MeshInstance2D" parent="MonitorScreen/WallCenter/ScreenLayout/Screen4" unique_id=1586514954]
+mesh = SubResource("ArrayMesh_jlsqs")
 
 [node name="Hitbox" type="Area2D" parent="MonitorScreen/WallCenter/ScreenLayout/Screen4" unique_id=36284508]
 
 [node name="CollisionPolygon2D" type="CollisionPolygon2D" parent="MonitorScreen/WallCenter/ScreenLayout/Screen4/Hitbox" unique_id=1866442288]
-position = Vector2(-369.94998, -118.400024)
-scale = Vector2(1.5, 1.5)
-polygon = PackedVector2Array(624.63336, 179.60002, 833.3, 179.60002, 833.3, 296.93335, 624.63336, 296.93335)
+polygon = PackedVector2Array(771, 459, 1082, 459, 1082, 634, 771, 634)
 
 [node name="Screen5" type="Node2D" parent="MonitorScreen/WallCenter/ScreenLayout" unique_id=347774710]
-position = Vector2(-207, 82)
+script = ExtResource("3_monitor")
 
-[node name="Surface" type="Polygon2D" parent="MonitorScreen/WallCenter/ScreenLayout/Screen5" unique_id=55223415]
-position = Vector2(-416.94998, -126)
-scale = Vector2(1.5, 1.5)
-polygon = PackedVector2Array(934.6333, 195.33334, 1144, 236, 1144, 354, 934.6333, 313.33334)
+[node name="Guide" type="Polygon2D" parent="MonitorScreen/WallCenter/ScreenLayout/Screen5" unique_id=2010254328]
+color = Color(0.2, 0.9, 1, 0.18)
+polygon = PackedVector2Array(1093, 460, 1405, 520, 1405, 696, 1093, 632)
+
+[node name="Surface" type="MeshInstance2D" parent="MonitorScreen/WallCenter/ScreenLayout/Screen5" unique_id=933660816]
+mesh = SubResource("ArrayMesh_q8u5g")
 
 [node name="Hitbox" type="Area2D" parent="MonitorScreen/WallCenter/ScreenLayout/Screen5" unique_id=2049274840]
 
 [node name="CollisionPolygon2D" type="CollisionPolygon2D" parent="MonitorScreen/WallCenter/ScreenLayout/Screen5/Hitbox" unique_id=632272210]
-position = Vector2(-416.94998, -126)
-scale = Vector2(1.5, 1.5)
-polygon = PackedVector2Array(934.6333, 195.33334, 1144, 236, 1144, 354, 934.6333, 313.33334)
+polygon = PackedVector2Array(1093, 460, 1405, 520, 1405, 696, 1093, 632)
+
+[node name="GuardOverlay" type="TextureRect" parent="MonitorScreen" unique_id=1702000101]
+layout_mode = 0
+offset_left = 752.0
+offset_top = 688.0
+offset_right = 1095.0
+offset_bottom = 1081.0
+mouse_filter = 2
+texture = ExtResource("4_guard")
+expand_mode = 1
+stretch_mode = 5
