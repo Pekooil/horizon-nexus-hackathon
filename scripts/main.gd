@@ -12,6 +12,7 @@ const ROOM_SCENE := preload("res://scenes/Room.tscn")
 @onready var money_label: Label = $MonitorScreen/TopBar/Money
 @onready var night_label: Label = $MonitorScreen/TopBar/Night
 @onready var clock_label: Label = $MonitorScreen/TopBar/Clock
+@onready var photos_label: Label = $MonitorScreen/TopBar/Photos
 
 var feeds: Array[SubViewport] = []   # the off-screen render targets (textures)
 var rooms: Array[Room] = []          # the editable room contents (game logic)
@@ -20,6 +21,7 @@ var rooms: Array[Room] = []          # the editable room contents (game logic)
 var detail_view: Control
 var detail_texture: TextureRect
 var detail_label: Label
+var photo_btn: Button
 var banner: Label
 var flash: ColorRect
 var overlay: Control
@@ -40,6 +42,7 @@ func _ready() -> void:
 	GameManager.money_changed.connect(_on_money_changed)
 	GameManager.night_changed.connect(_on_night_changed)
 	GameManager.clock_changed.connect(_on_clock_changed)
+	GameManager.photos_changed.connect(_on_photos_changed)
 	GameManager.game_over.connect(_on_game_over)
 
 	GameManager.start_game()
@@ -87,7 +90,7 @@ func _bind_monitors() -> void:
 		btn.pressed.connect(_open_detail.bind(i))
 
 func _style_hud() -> void:
-	for l in [money_label, night_label, clock_label]:
+	for l in [money_label, night_label, clock_label, photos_label]:
 		l.add_theme_font_size_override("font_size", 24)
 
 func _build_detail_view() -> void:
@@ -125,7 +128,7 @@ func _build_detail_view() -> void:
 	bar.add_theme_constant_override("separation", 24)
 	detail_view.add_child(bar)
 
-	var photo_btn := Button.new()
+	photo_btn = Button.new()
 	photo_btn.text = "  Take Polaroid  "
 	photo_btn.custom_minimum_size = Vector2(220, 48)
 	photo_btn.pressed.connect(_take_photo)
@@ -208,9 +211,12 @@ func _close_detail() -> void:
 	current_detail = -1
 
 func _take_photo() -> void:
-	_play_flash()
 	if current_detail < 0:
 		return
+	if not GameManager.use_photo():      # out of film -> can't take a photo
+		detail_label.text = "Out of film! No photos left tonight."
+		return
+	_play_flash()
 	var ferret := rooms[current_detail].get_active_ferret()
 	if ferret:
 		ferret.mark_caught()
@@ -236,6 +242,13 @@ func _on_night_changed(night: int) -> void:
 
 func _on_clock_changed(text: String) -> void:
 	clock_label.text = text
+
+func _on_photos_changed(count: int) -> void:
+	photos_label.text = "Photos: %d" % count
+	photos_label.add_theme_color_override(
+		"font_color", Color(1, 0.4, 0.4) if count == 0 else Color(1, 1, 1))
+	if photo_btn:
+		photo_btn.disabled = count <= 0
 
 func _on_game_over(won: bool) -> void:
 	overlay_label.text = "YOU SURVIVED!" if won else "GAME OVER"

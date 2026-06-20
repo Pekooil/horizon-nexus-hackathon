@@ -6,10 +6,14 @@ extends Node
 signal money_changed(amount: float)
 signal night_changed(night: int)
 signal clock_changed(text: String)
+signal photos_changed(count: int)
 signal game_over(won: bool)
 
 const MAX_NIGHTS := 5
-const NIGHT_DURATION := 90.0          # real seconds per night (12AM -> 6AM)
+const NIGHT_HOURS := 6                 # in-game hours per night (12AM -> 6AM)
+const SECONDS_PER_HOUR := 5.0          # real seconds per in-game hour
+const NIGHT_DURATION := NIGHT_HOURS * SECONDS_PER_HOUR   # 30 real seconds per night
+const PHOTOS_PER_NIGHT := 5            # Polaroids available each night
 const START_MONEY := 1000.0
 const PASSIVE_INCOME := 12.0          # $/sec earned when no ferret is active
 const FERRET_DRAIN := 45.0            # $/sec lost per active ferret
@@ -19,6 +23,7 @@ const FALSE_ACCUSE_PENALTY := 120.0   # cost of photographing an innocent
 var money := START_MONEY
 var current_night := 1
 var night_time_left := NIGHT_DURATION
+var photos_left := PHOTOS_PER_NIGHT
 var running := false
 var active_ferrets: Array = []        # CasinoPlayer nodes currently cheating
 
@@ -29,11 +34,21 @@ func start_game() -> void:
 
 func _begin_night() -> void:
 	night_time_left = NIGHT_DURATION
+	photos_left = PHOTOS_PER_NIGHT
 	active_ferrets.clear()
 	running = true
 	emit_signal("night_changed", current_night)
 	emit_signal("money_changed", money)
 	emit_signal("clock_changed", _format_clock())
+	emit_signal("photos_changed", photos_left)
+
+## Tries to consume one Polaroid. Returns false (and changes nothing) when out of film.
+func use_photo() -> bool:
+	if photos_left <= 0:
+		return false
+	photos_left -= 1
+	emit_signal("photos_changed", photos_left)
+	return true
 
 func _process(delta: float) -> void:
 	if not running:
@@ -82,6 +97,6 @@ func false_accuse() -> void:
 
 func _format_clock() -> String:
 	var elapsed := NIGHT_DURATION - night_time_left
-	var hour := int(elapsed / NIGHT_DURATION * 6.0)   # 0..6
+	var hour := mini(int(elapsed / SECONDS_PER_HOUR), NIGHT_HOURS)   # 0..6
 	var display := 12 if hour == 0 else hour
 	return "%d:00 AM" % display
