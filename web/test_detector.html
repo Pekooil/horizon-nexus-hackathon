@@ -1,0 +1,105 @@
+<!DOCTYPE html>
+<!-- Standalone test harness for the "frame" gesture detector.
+     Mirrors the detection logic in export/web_head_include.html but adds a visible
+     camera preview, landmark overlay, and an on-screen log so you can tune the
+     thresholds (HOLD_FRAMES / COOLDOWN_MS / CORNER_DIST) before exporting.
+     Serve over http://localhost (NOT file://) — getUserMedia needs a secure context:
+       cd web && python3 -m http.server 8000   ->   http://localhost:8000/test_detector.html
+-->
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>Frame Gesture — Detector Test</title>
+<style>
+  body { background:#111; color:#eee; font-family:system-ui, sans-serif; margin:0; padding:16px; }
+  #wrap { position:relative; width:640px; max-width:100%; }
+  video, canvas { position:absolute; top:0; left:0; width:640px; height:480px; transform:scaleX(-1); }
+  canvas { pointer-events:none; }
+  #spacer { width:640px; height:480px; }
+  button { font-size:16px; padding:10px 18px; margin:8px 0; cursor:pointer; }
+  #status { font-size:20px; font-weight:bold; }
+  #log { white-space:pre; font-family:monospace; font-size:13px; color:#9f9; max-height:160px; overflow:auto; }
+</style>
+</head>
+<body>
+  <h2>Frame Gesture — Detector Test</h2>
+  <button id="start">Enable camera</button>
+  <div id="status">camera: off</div>
+  <div id="wrap"><div id="spacer"></div><video id="video" autoplay playsinline muted></video><canvas id="overlay" width="640" height="480"></canvas></div>
+  <h3>Events</h3>
+  <div id="log"></div>
+
+<script type="module">
+import { FilesetResolver, HandLandmarker }
+  from "https://cdn.jsdelivr.net/npm/@mediapipe/tasks-vision@latest/vision_bundle.mjs";
+
+// ---- thresholds (keep in sync with export/web_head_include.html) -----------
+const HOLD_FRAMES = 8, COOLDOWN_MS = 1500, CORNER_DIST = 0.18;
+const WRIST = 0, THUMB_TIP = 4, THUMB_MCP = 2, INDEX_TIP = 8, INDEX_PIP = 6;
+const MIDDLE_TIP = 12, MIDDLE_PIP = 10, RING_TIP = 16, RING_PIP = 14, PINKY_TIP = 20, PINKY_PIP = 18;
+
+const video = document.getElementById("video");
+const canvas = document.getElementById("overlay");
+const ctx = canvas.getContext("2d");
+const statusEl = document.getElementById("status");
+const logEl = document.getElementById("log");
+function log(m){ logEl.textContent = (new Date().toLocaleTimeString()+"  "+m+"\n"+logEl.textContent).slice(0, 4000); }
+
+let handLandmarker = null, running = false, holdCount = 0, lastFireMs = 0, armed = true;
+
+const dist = (a,b) => Math.hypot(a.x-b.x, a.y-b.y);
+const extended = (lm,tip,joint) => dist(lm[tip],lm[WRIST]) > dist(lm[joint],lm[WRIST]);
+function isLShape(lm){
+  return extended(lm,THUMB_TIP,THUMB_MCP) && extended(lm,INDEX_TIP,INDEX_PIP)
+      && !extended(lm,MIDDLE_TIP,MIDDLE_PIP) && !extended(lm,RING_TIP,RING_PIP) && !extended(lm,PINKY_TIP,PINKY_PIP);
+}
+function framed(a,b){
+  return Math.min(dist(a[THUMB_TIP],b[INDEX_TIP]), dist(a[INDEX_TIP],b[THUMB_TIP]),
+                  dist(a[THUMB_TIP],b[THUMB_TIP]), dist(a[INDEX_TIP],b[INDEX_TIP])) < CORNER_DIST;
+}
+
+function draw(hands){
+  ctx.clearRect(0,0,canvas.width,canvas.height);
+  ctx.fillStyle = "#0f0";
+  for (const lm of hands) for (const p of lm){
+    ctx.beginPath(); ctx.arc(p.x*canvas.width, p.y*canvas.height, 4, 0, 7); ctx.fill();
+  }
+}
+
+function loop(){
+  if (!running) return;
+  if (handLandmarker && video.readyState >= 2){
+    const hands = handLandmarker.detectForVideo(video, performance.now()).landmarks || [];
+    draw(hands);
+    const gesture = hands.length === 2 && isLShape(hands[0]) && isLShape(hands[1]) && framed(hands[0], hands[1]);
+    if (gesture){
+      holdCount++;
+      const now = performance.now();
+      if (armed && holdCount >= HOLD_FRAMES && now - lastFireMs > COOLDOWN_MS){
+        lastFireMs = now; armed = false; log("📸 PHOTO  (gesture fired)");
+      }
+    } else { holdCount = 0; armed = true; }
+  }
+  requestAnimationFrame(loop);
+}
+
+document.getElementById("start").addEventListener("click", async () => {
+  if (running) return;
+  try{
+    if (!handLandmarker){
+      const fileset = await FilesetResolver.forVisionTasks("https://cdn.jsdelivr.net/npm/@mediapipe/tasks-vision@latest/wasm");
+      handLandmarker = await HandLandmarker.createFromOptions(fileset, {
+        baseOptions:{ modelAssetPath:"https://storage.googleapis.com/mediapipe-models/hand_landmarker/hand_landmarker/float16/1/hand_landmarker.task" },
+        runningMode:"VIDEO", numHands:2,
+      });
+    }
+    video.srcObject = await navigator.mediaDevices.getUserMedia({ video:true, audio:false });
+    await video.play();
+    running = true; statusEl.textContent = "camera: on"; statusEl.style.color = "#6f6";
+    log("camera started — make an L with each hand and bring the corners together");
+    requestAnimationFrame(loop);
+  } catch(e){ statusEl.textContent = "camera: blocked ("+e.name+")"; statusEl.style.color="#f66"; log("ERROR "+e); }
+});
+</script>
+</body>
+</html>

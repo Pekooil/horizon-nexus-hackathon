@@ -69,6 +69,11 @@ var money_sprites: Array[TextureRect] = []
 var current_detail := -1
 var spawn_timer := 4.0
 
+# Web-only: webcam "frame" gesture trigger for taking a photo (see
+# scripts/gesture_input_web.gd). Null on native platforms.
+var gesture_input: Node
+var camera_label: Label
+
 func _ready() -> void:
 	_build_feeds()
 	_bind_monitors()
@@ -78,6 +83,8 @@ func _ready() -> void:
 	_build_banner()
 	_build_overlay()
 	_build_flash()
+	_build_camera_indicator()
+	_setup_gesture_input()
 
 	GameManager.money_changed.connect(_on_money_changed)
 	GameManager.night_changed.connect(_on_night_changed)
@@ -242,6 +249,31 @@ func _build_flash() -> void:
 	flash.mouse_filter = Control.MOUSE_FILTER_IGNORE
 	add_child(flash)
 
+func _build_camera_indicator() -> void:
+	# Small top-right HUD readout of the webcam gesture detector (web only).
+	camera_label = Label.new()
+	camera_label.add_theme_font_size_override("font_size", 18)
+	camera_label.set_anchors_preset(Control.PRESET_TOP_RIGHT)
+	camera_label.offset_left = -360
+	camera_label.offset_right = -16
+	camera_label.offset_top = 12
+	camera_label.offset_bottom = 40
+	camera_label.horizontal_alignment = HORIZONTAL_ALIGNMENT_RIGHT
+	camera_label.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	camera_label.visible = false  # shown only while a camera screen is open
+	add_child(camera_label)
+
+func _setup_gesture_input() -> void:
+	if not OS.has_feature("web"):
+		return
+	gesture_input = preload("res://scripts/gesture_input_web.gd").new()
+	add_child(gesture_input)
+	# Same callback the "Take Polaroid" button uses; it self-guards when no room
+	# is open, so a stray gesture on the monitor wall harmlessly does nothing.
+	gesture_input.frame_gesture_detected.connect(_take_photo)
+	gesture_input.frame_gesture_detected.connect(_flash_camera_indicator)
+	gesture_input.camera_status_changed.connect(_on_camera_status_changed)
+
 # --- gameplay ---------------------------------------------------------------
 
 ## Empties every room and rebuilds the roster: 3 characters seated in the
@@ -319,12 +351,22 @@ func _open_detail(i: int) -> void:
 	detail_label.text = "%s  —  look closely for a cheater" % ROOM_NAMES[i]
 	detail_view.visible = true
 	monitor_screen.visible = false
+	# Turn on webcam gesture detection while this camera screen is open. The call
+	# runs inside the click that opened the screen, so the browser allows the prompt.
+	if gesture_input != null:
+		camera_label.visible = true
+		_on_camera_status_changed("starting")
+		gesture_input.request_camera()
 
 func _close_detail() -> void:
 	detail_view.visible = false
 	monitor_screen.visible = true
 	mouse_default_cursor_shape = CURSOR_ARROW
 	current_detail = -1
+	# Stop detecting once the player is back on the monitor wall.
+	if gesture_input != null:
+		gesture_input.stop_camera()
+		camera_label.visible = false
 
 func _take_photo() -> void:
 	if current_detail < 0:
@@ -377,6 +419,27 @@ func _on_photos_changed(count: int) -> void:
 		"font_color", Color(1, 0.4, 0.4) if count == 0 else Color(1, 1, 1))
 	if photo_btn:
 		photo_btn.disabled = count <= 0
+
+func _on_camera_status_changed(status: String) -> void:
+	if camera_label == null:
+		return
+	match status:
+		"on":
+			camera_label.text = "● Camera on — frame gesture = photo"
+			camera_label.add_theme_color_override("font_color", Color(0.55, 1.0, 0.55))
+		"error":
+			camera_label.text = "● Camera unavailable — use the button"
+			camera_label.add_theme_color_override("font_color", Color(1.0, 0.6, 0.6))
+		_:  # "starting" / "off" (paused)
+			camera_label.text = "● Camera starting…"
+			camera_label.add_theme_color_override("font_color", Color(0.75, 0.75, 0.75))
+
+func _flash_camera_indicator() -> void:
+	if camera_label == null:
+		return
+	camera_label.modulate = Color(1.0, 1.0, 0.4)
+	var t := create_tween()
+	t.tween_property(camera_label, "modulate", Color(1, 1, 1), 0.4)
 
 func _on_game_over(won: bool) -> void:
 	overlay_label.text = "YOU SURVIVED!" if won else "GAME OVER"

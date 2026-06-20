@@ -1,0 +1,372 @@
+<!DOCTYPE html>
+<html lang="en">
+	<head>
+		<meta charset="utf-8">
+		<meta name="viewport" content="width=device-width, user-scalable=no, initial-scale=1.0">
+		<title>horizon nexus hackathon</title>
+		<style>
+html, body, #canvas {
+	margin: 0;
+	padding: 0;
+	border: 0;
+}
+
+body {
+	color: white;
+	background-color: black;
+	overflow: hidden;
+	touch-action: none;
+}
+
+#canvas {
+	display: block;
+}
+
+#canvas:focus {
+	outline: none;
+}
+
+#status, #status-splash, #status-progress {
+	position: absolute;
+	left: 0;
+	right: 0;
+}
+
+#status, #status-splash {
+	top: 0;
+	bottom: 0;
+}
+
+#status {
+	background-color: #242424;
+	display: flex;
+	flex-direction: column;
+	justify-content: center;
+	align-items: center;
+	visibility: hidden;
+}
+
+#status-splash {
+	max-height: 100%;
+	max-width: 100%;
+	margin: auto;
+}
+
+#status-splash.show-image--false {
+	display: none;
+}
+
+#status-splash.fullsize--true {
+	height: 100%;
+	width: 100%;
+	object-fit: contain;
+}
+
+#status-splash.use-filter--false {
+	image-rendering: pixelated;
+}
+
+#status-progress, #status-notice {
+	display: none;
+}
+
+#status-progress {
+	bottom: 10%;
+	width: 50%;
+	margin: 0 auto;
+}
+
+#status-notice {
+	background-color: #5b3943;
+	border-radius: 0.5rem;
+	border: 1px solid #9b3943;
+	color: #e0e0e0;
+	font-family: 'Noto Sans', 'Droid Sans', Arial, sans-serif;
+	line-height: 1.3;
+	margin: 0 2rem;
+	overflow: hidden;
+	padding: 1rem;
+	text-align: center;
+	z-index: 1;
+}
+		</style>
+		<link id="-gd-engine-icon" rel="icon" type="image/png" href="horizon nexus hackathon.icon.png" />
+<link rel="apple-touch-icon" href="horizon nexus hackathon.apple-touch-icon.png"/>
+
+	<!-- Ferret Casino Royale — webcam hand-gesture ("frame") detector.
+     Paste this into the Godot Web export preset:
+       Export > Web > HTML > Head Include
+     It runs MediaPipe Tasks Vision HandLandmarker on the player's webcam, detects a
+     two-handed "frame" gesture (each hand makes an L with thumb + index; the two L's
+     are brought together to form a rectangle), and forwards a "photo" event to Godot
+     through window.__godotGestureCb. The Godot side registers that callback in
+     scripts/gesture_input_web.gd. Everything here is self-contained so the exported
+     itch.io zip needs no extra files. -->
+<script>
+  // Pre-stub: a Start click can land before the ES module below finishes loading
+  // from the CDN. Without this, window.startGestureCamera would be undefined at
+  // click time and the camera would silently never open. The stub records the
+  // request; the module starts the camera as soon as it's ready.
+  window.__startCamRequested = false;
+  window.startGestureCamera = function () { window.__startCamRequested = true; };
+  window.stopGestureCamera = function () {};
+  window.__gestureStatus = "";
+</script>
+<script type="module">
+import { FilesetResolver, HandLandmarker }
+  from "https://cdn.jsdelivr.net/npm/@mediapipe/tasks-vision@latest/vision_bundle.mjs";
+
+// ---- tunable thresholds (normalized 0..1 image coords) ---------------------
+const HOLD_FRAMES = 8;      // frames the gesture must persist before it counts
+const COOLDOWN_MS = 1500;   // minimum gap between two fired photos
+const CORNER_DIST = 0.18;   // how close the two L "corners" must be to read as a frame
+
+// ---- MediaPipe landmark indices --------------------------------------------
+const WRIST = 0;
+const THUMB_TIP = 4,  THUMB_MCP = 2;
+const INDEX_TIP = 8,  INDEX_PIP = 6;
+const MIDDLE_TIP = 12, MIDDLE_PIP = 10;
+const RING_TIP = 16,  RING_PIP = 14;
+const PINKY_TIP = 20, PINKY_PIP = 18;
+
+let handLandmarker = null;
+let video = null;
+let stream = null;
+let running = false;
+let holdCount = 0;
+let lastFireMs = 0;
+let armed = true;          // re-armed only after the gesture is released
+
+function notify(msg) { if (window.__godotGestureCb) window.__godotGestureCb(msg); }
+function setStatus(s) { window.__gestureStatus = s; notify("status:" + s); }
+
+function dist(a, b) { return Math.hypot(a.x - b.x, a.y - b.y); }
+
+// A finger is "extended" when its tip is farther from the wrist than its joint.
+function extended(lm, tip, joint) { return dist(lm[tip], lm[WRIST]) > dist(lm[joint], lm[WRIST]); }
+
+// One hand makes the framing "L": thumb + index out, the other three curled.
+function isLShape(lm) {
+  return extended(lm, THUMB_TIP, THUMB_MCP)
+      && extended(lm, INDEX_TIP, INDEX_PIP)
+      && !extended(lm, MIDDLE_TIP, MIDDLE_PIP)
+      && !extended(lm, RING_TIP, RING_PIP)
+      && !extended(lm, PINKY_TIP, PINKY_PIP);
+}
+
+// The two L's form a frame when a corner of one (thumb/index tip) meets a
+// corner of the other — i.e. the closest cross fingertip pair is near-touching.
+function framed(a, b) {
+  const d = Math.min(
+    dist(a[THUMB_TIP], b[INDEX_TIP]),
+    dist(a[INDEX_TIP], b[THUMB_TIP]),
+    dist(a[THUMB_TIP], b[THUMB_TIP]),
+    dist(a[INDEX_TIP], b[INDEX_TIP]),
+  );
+  return d < CORNER_DIST;
+}
+
+function loop() {
+  if (!running) return;
+  if (handLandmarker && video && video.readyState >= 2) {
+    const res = handLandmarker.detectForVideo(video, performance.now());
+    const hands = res.landmarks || [];
+    const gesture = hands.length === 2
+      && isLShape(hands[0]) && isLShape(hands[1])
+      && framed(hands[0], hands[1]);
+
+    if (gesture) {
+      holdCount++;
+      const now = performance.now();
+      if (armed && holdCount >= HOLD_FRAMES && now - lastFireMs > COOLDOWN_MS) {
+        lastFireMs = now;
+        armed = false;        // must release before it can fire again
+        notify("photo");
+      }
+    } else {
+      holdCount = 0;
+      armed = true;
+    }
+  }
+  requestAnimationFrame(loop);
+}
+
+// Called from Godot on a user gesture (Start button) so the browser allows the prompt.
+async function startGestureCamera() {
+  if (running) return;
+  try {
+    if (!handLandmarker) {
+      const fileset = await FilesetResolver.forVisionTasks(
+        "https://cdn.jsdelivr.net/npm/@mediapipe/tasks-vision@latest/wasm");
+      handLandmarker = await HandLandmarker.createFromOptions(fileset, {
+        baseOptions: {
+          modelAssetPath: "https://storage.googleapis.com/mediapipe-models/hand_landmarker/hand_landmarker/float16/1/hand_landmarker.task",
+        },
+        runningMode: "VIDEO",
+        numHands: 2,
+      });
+    }
+    if (!stream) {
+      stream = await navigator.mediaDevices.getUserMedia({ video: true, audio: false });
+      video = document.createElement("video");
+      video.autoplay = true;
+      video.playsInline = true;
+      video.muted = true;
+      video.style.display = "none";
+      video.srcObject = stream;
+      document.body.appendChild(video);
+      await video.play();
+      stream.getVideoTracks()[0].addEventListener("ended", () => {
+        running = false;
+        setStatus("off");
+      });
+    }
+    running = true;
+    setStatus("on");
+    requestAnimationFrame(loop);
+  } catch (e) {
+    console.error("[gesture] camera/init failed:", e);
+    setStatus("error");
+  }
+}
+
+// Pause detection when the player leaves a camera screen. The webcam stream is
+// kept warm so reopening a screen resumes instantly (no re-prompt, no warmup).
+function stopGestureCamera() {
+  running = false;
+  holdCount = 0;
+  armed = true;
+  setStatus("off");
+}
+
+window.startGestureCamera = startGestureCamera;
+window.stopGestureCamera = stopGestureCamera;
+// Honor a request that arrived before this module finished loading.
+if (window.__startCamRequested) startGestureCamera();
+</script>
+
+</head>
+	<body>
+		<canvas id="canvas">
+			Your browser does not support the canvas tag.
+		</canvas>
+
+		<noscript>
+			Your browser does not support JavaScript.
+		</noscript>
+
+		<div id="status">
+			<img id="status-splash" class="show-image--true fullsize--true use-filter--true" src="horizon nexus hackathon.png" alt="">
+			<progress id="status-progress"></progress>
+			<div id="status-notice"></div>
+		</div>
+
+		<script src="horizon nexus hackathon.js"></script>
+		<script>
+const GODOT_CONFIG = {"args":[],"canvasResizePolicy":2,"emscriptenPoolSize":8,"ensureCrossOriginIsolationHeaders":true,"executable":"horizon nexus hackathon","experimentalVK":false,"fileSizes":{"horizon nexus hackathon.pck":224268,"horizon nexus hackathon.wasm":37896978},"focusCanvas":true,"gdextensionLibs":[],"godotPoolSize":4};
+const GODOT_THREADS_ENABLED = false;
+const engine = new Engine(GODOT_CONFIG);
+
+(function () {
+	const statusOverlay = document.getElementById('status');
+	const statusProgress = document.getElementById('status-progress');
+	const statusNotice = document.getElementById('status-notice');
+
+	let initializing = true;
+	let statusMode = '';
+
+	function setStatusMode(mode) {
+		if (statusMode === mode || !initializing) {
+			return;
+		}
+		if (mode === 'hidden') {
+			statusOverlay.remove();
+			initializing = false;
+			return;
+		}
+		statusOverlay.style.visibility = 'visible';
+		statusProgress.style.display = mode === 'progress' ? 'block' : 'none';
+		statusNotice.style.display = mode === 'notice' ? 'block' : 'none';
+		statusMode = mode;
+	}
+
+	function setStatusNotice(text) {
+		while (statusNotice.lastChild) {
+			statusNotice.removeChild(statusNotice.lastChild);
+		}
+		const lines = text.split('\n');
+		lines.forEach((line) => {
+			statusNotice.appendChild(document.createTextNode(line));
+			statusNotice.appendChild(document.createElement('br'));
+		});
+	}
+
+	function displayFailureNotice(err) {
+		console.error(err);
+		if (err instanceof Error) {
+			setStatusNotice(err.message);
+		} else if (typeof err === 'string') {
+			setStatusNotice(err);
+		} else {
+			setStatusNotice('An unknown error occurred.');
+		}
+		setStatusMode('notice');
+		initializing = false;
+	}
+
+	const missing = Engine.getMissingFeatures({
+		threads: GODOT_THREADS_ENABLED,
+	});
+
+	if (missing.length !== 0) {
+		if (GODOT_CONFIG['serviceWorker'] && GODOT_CONFIG['ensureCrossOriginIsolationHeaders'] && 'serviceWorker' in navigator) {
+			let serviceWorkerRegistrationPromise;
+			try {
+				serviceWorkerRegistrationPromise = navigator.serviceWorker.getRegistration();
+			} catch (err) {
+				serviceWorkerRegistrationPromise = Promise.reject(new Error('Service worker registration failed.'));
+			}
+			// There's a chance that installing the service worker would fix the issue
+			Promise.race([
+				serviceWorkerRegistrationPromise.then((registration) => {
+					if (registration != null) {
+						return Promise.reject(new Error('Service worker already exists.'));
+					}
+					return registration;
+				}).then(() => engine.installServiceWorker()),
+				// For some reason, `getRegistration()` can stall
+				new Promise((resolve) => {
+					setTimeout(() => resolve(), 2000);
+				}),
+			]).then(() => {
+				// Reload if there was no error.
+				window.location.reload();
+			}).catch((err) => {
+				console.error('Error while registering service worker:', err);
+			});
+		} else {
+			// Display the message as usual
+			const missingMsg = 'Error\nThe following features required to run Godot projects on the Web are missing:\n';
+			displayFailureNotice(missingMsg + missing.join('\n'));
+		}
+	} else {
+		setStatusMode('progress');
+		engine.startGame({
+			'onProgress': function (current, total) {
+				if (current > 0 && total > 0) {
+					statusProgress.value = current;
+					statusProgress.max = total;
+				} else {
+					statusProgress.removeAttribute('value');
+					statusProgress.removeAttribute('max');
+				}
+			},
+		}).then(() => {
+			setStatusMode('hidden');
+		}, displayFailureNotice);
+	}
+}());
+		</script>
+	</body>
+</html>
+
