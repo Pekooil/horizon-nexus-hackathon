@@ -1,8 +1,9 @@
 [gd_scene format=3 uid="uid://njem5lngracb"]
 
 [ext_resource type="Script" uid="uid://dlutnkk6nsx0h" path="res://scripts/main.gd" id="1_main"]
+[ext_resource type="Texture2D" uid="uid://cmp0oobgrrw0d" path="res://assets/ferret-casino.png" id="2_bg"]
 
-[node name="Main" type="Control" unique_id=41889520]
+[node name="Main" type="Control" unique_id=1404050625]
 layout_mode = 3
 anchors_preset = 15
 anchor_right = 1.0
@@ -11,7 +12,7 @@ grow_horizontal = 2
 grow_vertical = 2
 script = ExtResource("1_main")
 
-[node name="MonitorScreen" type="Control" parent="." unique_id=1207146827]
+[node name="MonitorScreen" type="Control" parent="." unique_id=451415387]
 layout_mode = 1
 anchors_preset = 15
 anchor_right = 1.0
@@ -19,16 +20,29 @@ anchor_bottom = 1.0
 grow_horizontal = 2
 grow_vertical = 2
 
-[node name="Background" type="ColorRect" parent="MonitorScreen" unique_id=450110766]
+[node name="BackgroundGuide" type="TextureRect" parent="MonitorScreen" unique_id=51812675]
 layout_mode = 1
 anchors_preset = 15
 anchor_right = 1.0
 anchor_bottom = 1.0
 grow_horizontal = 2
 grow_vertical = 2
-color = Color(0.07, 0.07, 0.1, 1)
+mouse_filter = 2
+texture = ExtResource("2_bg")
+expand_mode = 1
+stretch_mode = 6
 
-[node name="Title" type="Label" parent="MonitorScreen" unique_id=1869862130]
+[node name="Background" type="ColorRect" parent="MonitorScreen" unique_id=708016583]
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+mouse_filter = 2
+color = Color(1, 1, 1, 0)
+
+[node name="Title" type="Label" parent="MonitorScreen" unique_id=742955815]
 layout_mode = 1
 anchors_preset = 10
 anchor_right = 1.0
@@ -39,7 +53,7 @@ theme_override_colors/font_color = Color(0.85, 0.3, 0.3, 1)
 text = "● CASINO SECURITY — LIVE FEEDS"
 horizontal_alignment = 1
 
-[node name="TopBar" type="HBoxContainer" parent="MonitorScreen" unique_id=1617212312]
+[node name="TopBar" type="HBoxContainer" parent="MonitorScreen" unique_id=1028472448]
 layout_mode = 1
 anchors_preset = 10
 anchor_right = 1.0
@@ -49,15 +63,15 @@ grow_horizontal = 2
 theme_override_constants/separation = 60
 alignment = 1
 
-[node name="Money" type="Label" parent="MonitorScreen/TopBar" unique_id=2033298424]
+[node name="Money" type="Label" parent="MonitorScreen/TopBar" unique_id=1503927125]
 layout_mode = 2
 text = "$1000"
 
-[node name="Night" type="Label" parent="MonitorScreen/TopBar" unique_id=14056508]
+[node name="Night" type="Label" parent="MonitorScreen/TopBar" unique_id=1496309158]
 layout_mode = 2
 text = "Night 1 / 5"
 
-[node name="Clock" type="Label" parent="MonitorScreen/TopBar" unique_id=1128815045]
+[node name="Clock" type="Label" parent="MonitorScreen/TopBar" unique_id=359394216]
 layout_mode = 2
 text = "12:00 AM"
 
@@ -65,7 +79,7 @@ text = "12:00 AM"
 layout_mode = 2
 text = "Photos: 5"
 
-[node name="WallCenter" type="CenterContainer" parent="MonitorScreen" unique_id=306172318]
+[node name="WallCenter" type="Control" parent="MonitorScreen" unique_id=1135378175]
 layout_mode = 1
 anchors_preset = 15
 anchor_right = 1.0
@@ -74,86 +88,95 @@ offset_top = 84.0
 grow_horizontal = 2
 grow_vertical = 2
 
-[node name="Grid" type="GridContainer" parent="MonitorScreen/WallCenter" unique_id=49996258]
-layout_mode = 2
-theme_override_constants/h_separation = 18
-theme_override_constants/v_separation = 18
-columns = 3
+[node name="ScreenLayout" type="Node2D" parent="MonitorScreen/WallCenter" unique_id=1953222979]
+position = Vector2(314, 209)
 
-[node name="Screen0" type="Button" parent="MonitorScreen/WallCenter/Grid" unique_id=826405784]
-custom_minimum_size = Vector2(360, 202)
-layout_mode = 2
+[node name="Screen0" type="Node2D" parent="MonitorScreen/WallCenter/ScreenLayout" unique_id=1249736816]
+position = Vector2(-48, -33)
 
-[node name="Tex" type="TextureRect" parent="MonitorScreen/WallCenter/Grid/Screen0" unique_id=1636803083]
-layout_mode = 1
-anchors_preset = 15
-anchor_right = 1.0
-anchor_bottom = 1.0
-grow_horizontal = 2
-grow_vertical = 2
-mouse_filter = 2
+[node name="Surface" type="Polygon2D" parent="MonitorScreen/WallCenter/ScreenLayout/Screen0" unique_id=1049081075]
+position = Vector2(-337.94998, -183.25)
+scale = Vector2(1.5, 1.5)
+polygon = PackedVector2Array(345, 242, 547, 199, 540, 305, 338, 344)
 
-[node name="Screen1" type="Button" parent="MonitorScreen/WallCenter/Grid" unique_id=1384734286]
-custom_minimum_size = Vector2(360, 202)
-layout_mode = 2
+[node name="Hitbox" type="Area2D" parent="MonitorScreen/WallCenter/ScreenLayout/Screen0" unique_id=1223570285]
 
-[node name="Tex" type="TextureRect" parent="MonitorScreen/WallCenter/Grid/Screen1" unique_id=338419247]
-layout_mode = 1
-anchors_preset = 15
-anchor_right = 1.0
-anchor_bottom = 1.0
-grow_horizontal = 2
-grow_vertical = 2
-mouse_filter = 2
+[node name="CollisionPolygon2D" type="CollisionPolygon2D" parent="MonitorScreen/WallCenter/ScreenLayout/Screen0/Hitbox" unique_id=1109076066]
+position = Vector2(-337.94998, -183.25)
+scale = Vector2(1.5, 1.5)
+polygon = PackedVector2Array(345, 242, 547, 199, 540, 305, 338, 344)
 
-[node name="Screen2" type="Button" parent="MonitorScreen/WallCenter/Grid" unique_id=514176963]
-custom_minimum_size = Vector2(360, 202)
-layout_mode = 2
+[node name="Screen1" type="Node2D" parent="MonitorScreen/WallCenter/ScreenLayout" unique_id=1696400789]
+position = Vector2(-92, 87)
 
-[node name="Tex" type="TextureRect" parent="MonitorScreen/WallCenter/Grid/Screen2" unique_id=380785672]
-layout_mode = 1
-anchors_preset = 15
-anchor_right = 1.0
-anchor_bottom = 1.0
-grow_horizontal = 2
-grow_vertical = 2
-mouse_filter = 2
+[node name="Surface" type="Polygon2D" parent="MonitorScreen/WallCenter/ScreenLayout/Screen1" unique_id=2103608477]
+position = Vector2(-358.94998, -123.399994)
+scale = Vector2(1.5, 1.5)
+polygon = PackedVector2Array(589.3, 72.26666, 827.9667, 71.59999, 812.63336, 180.26666, 604.63336, 180.26666)
 
-[node name="Screen3" type="Button" parent="MonitorScreen/WallCenter/Grid" unique_id=980486312]
-custom_minimum_size = Vector2(360, 202)
-layout_mode = 2
+[node name="Hitbox" type="Area2D" parent="MonitorScreen/WallCenter/ScreenLayout/Screen1" unique_id=794872546]
 
-[node name="Tex" type="TextureRect" parent="MonitorScreen/WallCenter/Grid/Screen3" unique_id=37723541]
-layout_mode = 1
-anchors_preset = 15
-anchor_right = 1.0
-anchor_bottom = 1.0
-grow_horizontal = 2
-grow_vertical = 2
-mouse_filter = 2
+[node name="CollisionPolygon2D" type="CollisionPolygon2D" parent="MonitorScreen/WallCenter/ScreenLayout/Screen1/Hitbox" unique_id=338232243]
+position = Vector2(-349, -123)
+scale = Vector2(1.5, 1.5)
+polygon = PackedVector2Array(582.6667, 72, 821.3334, 71.33333, 806.00006, 180, 598, 180)
 
-[node name="Screen4" type="Button" parent="MonitorScreen/WallCenter/Grid" unique_id=1691616559]
-custom_minimum_size = Vector2(360, 202)
-layout_mode = 2
+[node name="Screen2" type="Node2D" parent="MonitorScreen/WallCenter/ScreenLayout" unique_id=521819988]
+position = Vector2(-193, 83)
 
-[node name="Tex" type="TextureRect" parent="MonitorScreen/WallCenter/Grid/Screen4" unique_id=1034514525]
-layout_mode = 1
-anchors_preset = 15
-anchor_right = 1.0
-anchor_bottom = 1.0
-grow_horizontal = 2
-grow_vertical = 2
-mouse_filter = 2
+[node name="Surface" type="Polygon2D" parent="MonitorScreen/WallCenter/ScreenLayout/Screen2" unique_id=664923658]
+position = Vector2(-411.44998, -126)
+scale = Vector2(1.5, 1.5)
+polygon = PackedVector2Array(929.6333, 83.33333, 1133.6333, 114.000015, 1138.3, 234.00002, 934.9667, 190.66667)
 
-[node name="Screen5" type="Button" parent="MonitorScreen/WallCenter/Grid" unique_id=1617170466]
-custom_minimum_size = Vector2(360, 202)
-layout_mode = 2
+[node name="Hitbox" type="Area2D" parent="MonitorScreen/WallCenter/ScreenLayout/Screen2" unique_id=1023373754]
 
-[node name="Tex" type="TextureRect" parent="MonitorScreen/WallCenter/Grid/Screen5" unique_id=1351059303]
-layout_mode = 1
-anchors_preset = 15
-anchor_right = 1.0
-anchor_bottom = 1.0
-grow_horizontal = 2
-grow_vertical = 2
-mouse_filter = 2
+[node name="CollisionPolygon2D" type="CollisionPolygon2D" parent="MonitorScreen/WallCenter/ScreenLayout/Screen2/Hitbox" unique_id=859415569]
+position = Vector2(-408.00003, -122)
+scale = Vector2(1.5, 1.5)
+polygon = PackedVector2Array(927.3334, 80.66666, 1131.3334, 111.33334, 1136, 231.33334, 932.66675, 188)
+
+[node name="Screen3" type="Node2D" parent="MonitorScreen/WallCenter/ScreenLayout" unique_id=1067765556]
+position = Vector2(-96, 137)
+
+[node name="Surface" type="Polygon2D" parent="MonitorScreen/WallCenter/ScreenLayout/Screen3" unique_id=91392271]
+position = Vector2(-361, -99)
+scale = Vector2(1.5, 1.5)
+polygon = PackedVector2Array(394.23337, 182.63336, 602.6667, 141.33333, 602.6667, 258.6667, 394.23337, 300.63336)
+
+[node name="Hitbox" type="Area2D" parent="MonitorScreen/WallCenter/ScreenLayout/Screen3" unique_id=526051854]
+
+[node name="CollisionPolygon2D" type="CollisionPolygon2D" parent="MonitorScreen/WallCenter/ScreenLayout/Screen3/Hitbox" unique_id=529755857]
+position = Vector2(-377.40002, -81.95001)
+scale = Vector2(1.5, 1.5)
+polygon = PackedVector2Array(404.93338, 170.63336, 613.60004, 129.96667, 613.60004, 247.30002, 404.93338, 288.63336)
+
+[node name="Screen4" type="Node2D" parent="MonitorScreen/WallCenter/ScreenLayout" unique_id=2114295064]
+position = Vector2(-111, 98)
+
+[node name="Surface" type="Polygon2D" parent="MonitorScreen/WallCenter/ScreenLayout/Screen4" unique_id=1143149573]
+position = Vector2(-370.94998, -117.400024)
+scale = Vector2(1.5, 1.5)
+polygon = PackedVector2Array(625.30005, 178.93335, 833.9667, 178.93335, 833.9667, 296.2667, 625.30005, 296.2667)
+
+[node name="Hitbox" type="Area2D" parent="MonitorScreen/WallCenter/ScreenLayout/Screen4" unique_id=36284508]
+
+[node name="CollisionPolygon2D" type="CollisionPolygon2D" parent="MonitorScreen/WallCenter/ScreenLayout/Screen4/Hitbox" unique_id=1866442288]
+position = Vector2(-369.94998, -118.400024)
+scale = Vector2(1.5, 1.5)
+polygon = PackedVector2Array(624.63336, 179.60002, 833.3, 179.60002, 833.3, 296.93335, 624.63336, 296.93335)
+
+[node name="Screen5" type="Node2D" parent="MonitorScreen/WallCenter/ScreenLayout" unique_id=347774710]
+position = Vector2(-207, 82)
+
+[node name="Surface" type="Polygon2D" parent="MonitorScreen/WallCenter/ScreenLayout/Screen5" unique_id=55223415]
+position = Vector2(-416.94998, -126)
+scale = Vector2(1.5, 1.5)
+polygon = PackedVector2Array(934.6333, 195.33334, 1144, 236, 1144, 354, 934.6333, 313.33334)
+
+[node name="Hitbox" type="Area2D" parent="MonitorScreen/WallCenter/ScreenLayout/Screen5" unique_id=2049274840]
+
+[node name="CollisionPolygon2D" type="CollisionPolygon2D" parent="MonitorScreen/WallCenter/ScreenLayout/Screen5/Hitbox" unique_id=632272210]
+position = Vector2(-416.94998, -126)
+scale = Vector2(1.5, 1.5)
+polygon = PackedVector2Array(934.6333, 195.33334, 1144, 236, 1144, 354, 934.6333, 313.33334)
