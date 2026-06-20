@@ -1,0 +1,139 @@
+[gd_scene load_steps=2 format=3 uid="uid://c0fcasino0main"]
+
+[ext_resource type="Script" path="res://scripts/main.gd" id="1_main"]
+
+[node name="Main" type="Control"]
+layout_mode = 3
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+script = ExtResource("1_main")
+
+[node name="MonitorScreen" type="Control" parent="."]
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+
+[node name="Background" type="ColorRect" parent="MonitorScreen"]
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+color = Color(0.07, 0.07, 0.1, 1)
+
+[node name="Title" type="Label" parent="MonitorScreen"]
+layout_mode = 1
+anchors_preset = 10
+anchor_right = 1.0
+offset_top = 10.0
+offset_bottom = 34.0
+theme_override_colors/font_color = Color(0.85, 0.3, 0.3, 1)
+text = "● CASINO SECURITY — LIVE FEEDS"
+horizontal_alignment = 1
+
+[node name="TopBar" type="HBoxContainer" parent="MonitorScreen"]
+layout_mode = 1
+anchors_preset = 10
+anchor_right = 1.0
+offset_top = 40.0
+offset_bottom = 78.0
+theme_override_constants/separation = 60
+alignment = 1
+
+[node name="Money" type="Label" parent="MonitorScreen/TopBar"]
+layout_mode = 2
+text = "$1000"
+
+[node name="Night" type="Label" parent="MonitorScreen/TopBar"]
+layout_mode = 2
+text = "Night 1 / 5"
+
+[node name="Clock" type="Label" parent="MonitorScreen/TopBar"]
+layout_mode = 2
+text = "12:00 AM"
+
+[node name="WallCenter" type="CenterContainer" parent="MonitorScreen"]
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+offset_top = 84.0
+grow_horizontal = 2
+grow_vertical = 2
+
+[node name="Grid" type="GridContainer" parent="MonitorScreen/WallCenter"]
+layout_mode = 2
+theme_override_constants/h_separation = 18
+theme_override_constants/v_separation = 18
+columns = 3
+
+[node name="Screen0" type="Button" parent="MonitorScreen/WallCenter/Grid"]
+custom_minimum_size = Vector2(360, 202)
+layout_mode = 2
+
+[node name="Tex" type="TextureRect" parent="MonitorScreen/WallCenter/Grid/Screen0"]
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+mouse_filter = 2
+
+[node name="Screen1" type="Button" parent="MonitorScreen/WallCenter/Grid"]
+custom_minimum_size = Vector2(360, 202)
+layout_mode = 2
+
+[node name="Tex" type="TextureRect" parent="MonitorScreen/WallCenter/Grid/Screen1"]
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+mouse_filter = 2
+
+[node name="Screen2" type="Button" parent="MonitorScreen/WallCenter/Grid"]
+custom_minimum_size = Vector2(360, 202)
+layout_mode = 2
+
+[node name="Tex" type="TextureRect" parent="MonitorScreen/WallCenter/Grid/Screen2"]
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+mouse_filter = 2
+
+[node name="Screen3" type="Button" parent="MonitorScreen/WallCenter/Grid"]
+custom_minimum_size = Vector2(360, 202)
+layout_mode = 2
+
+[node name="Tex" type="TextureRect" parent="MonitorScreen/WallCenter/Grid/Screen3"]
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+mouse_filter = 2
+
+[node name="Screen4" type="Button" parent="MonitorScreen/WallCenter/Grid"]
+custom_minimum_size = Vector2(360, 202)
+layout_mode = 2
+
+[node name="Tex" type="TextureRect" parent="MonitorScreen/WallCenter/Grid/Screen4"]
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+mouse_filter = 2
+
+[node name="Screen5" type="Button" parent="MonitorScreen/WallCenter/Grid"]
+custom_minimum_size = Vector2(360, 202)
+layout_mode = 2
+
+[node name="Tex" type="TextureRect" parent="MonitorScreen/WallCenter/Grid/Screen5"]
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+mouse_filter = 2

@@ -1,0 +1,26 @@
+[gd_scene format=3 uid="uid://bo875kptdmb4c"]
+
+[ext_resource type="Script" path="res://scripts/casino_player.gd" id="1_player"]
+[ext_resource type="Texture2D" path="res://icon.svg" id="2_icon"]
+
+[node name="CasinoPlayer" type="Node2D"]
+script = ExtResource("1_player")
+
+[node name="Body" type="Sprite2D" parent="."]
+texture = ExtResource("2_icon")
+scale = Vector2(0.28, 0.28)
+self_modulate = Color(0.36, 0.47, 0.85, 1)
+
+[node name="Tell" type="Sprite2D" parent="."]
+visible = false
+position = Vector2(0, -34)
+texture = ExtResource("2_icon")
+scale = Vector2(0.16, 0.16)
+self_modulate = Color(1, 0.85, 0.2, 1)
+
+[node name="Caught" type="Sprite2D" parent="."]
+visible = false
+position = Vector2(0, -16)
+texture = ExtResource("2_icon")
+scale = Vector2(0.34, 0.34)
+self_modulate = Color(1, 0.25, 0.25, 0.7)
