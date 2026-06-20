@@ -66,6 +66,8 @@ var overlay: Control
 var overlay_label: Label
 
 var money_sprites: Array[TextureRect] = []
+var map_panel: Control
+var map_buttons := {}   # room_idx -> Button on the floor map
 var current_detail := -1
 var spawn_timer := 4.0
 
@@ -80,6 +82,7 @@ func _ready() -> void:
 	_build_money_display()
 	_style_hud()
 	_build_detail_view()
+	_build_map()
 	_build_banner()
 	_build_overlay()
 	_build_flash()
@@ -205,6 +208,76 @@ func _build_detail_view() -> void:
 	back_btn.custom_minimum_size = Vector2(180, 48)
 	back_btn.pressed.connect(_close_detail)
 	bar.add_child(back_btn)
+
+func _build_map() -> void:
+	# Floor map pinned to the bottom-right of the detail view. Each room is a
+	# clickable cell that jumps the view to that camera (calls _open_detail), so
+	# the player can hop between rooms without going back to the wall. Layout:
+	#     [blank]   Entrance   [blank]
+	#     Lounge    Bar        Poker
+	#     [blank]   Roulette   Slot Machines
+	# -1 marks a blank cell; numbers index ROOM_NAMES/ROOM_SCENES.
+	var grid_order := [-1, 0, -1, 2, 1, 3, -1, 4, 5]
+	var cell_size := Vector2(96, 50)
+
+	map_panel = PanelContainer.new()
+	map_panel.set_anchors_preset(Control.PRESET_BOTTOM_RIGHT)
+	map_panel.grow_horizontal = Control.GROW_DIRECTION_BEGIN
+	map_panel.grow_vertical = Control.GROW_DIRECTION_BEGIN
+	map_panel.offset_right = -24
+	map_panel.offset_bottom = -100   # sit above the Take Polaroid / Back button bar
+	var sb := StyleBoxFlat.new()
+	sb.bg_color = Color(0.05, 0.05, 0.08, 0.88)
+	sb.set_corner_radius_all(8)
+	sb.set_content_margin_all(10)
+	sb.border_color = Color(0.45, 0.45, 0.55, 0.9)
+	sb.set_border_width_all(2)
+	map_panel.add_theme_stylebox_override("panel", sb)
+	detail_view.add_child(map_panel)
+
+	var vb := VBoxContainer.new()
+	vb.add_theme_constant_override("separation", 6)
+	map_panel.add_child(vb)
+
+	var title := Label.new()
+	title.text = "FLOOR MAP"
+	title.add_theme_font_size_override("font_size", 14)
+	title.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+	vb.add_child(title)
+
+	var grid := GridContainer.new()
+	grid.columns = 3
+	grid.add_theme_constant_override("h_separation", 4)
+	grid.add_theme_constant_override("v_separation", 4)
+	vb.add_child(grid)
+
+	for idx in grid_order:
+		if idx == -1:
+			var spacer := Control.new()
+			spacer.custom_minimum_size = cell_size
+			grid.add_child(spacer)
+			continue
+		var btn := Button.new()
+		btn.text = ROOM_NAMES[idx]
+		btn.custom_minimum_size = cell_size
+		btn.add_theme_font_size_override("font_size", 12)
+		btn.clip_text = true
+		btn.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
+		btn.pressed.connect(_open_detail.bind(idx))
+		grid.add_child(btn)
+		map_buttons[idx] = btn
+
+## Highlights the room currently shown full-screen and disables its map cell so
+## it reads as "you are here" and can't re-trigger itself.
+func _update_map_highlight() -> void:
+	for idx in map_buttons:
+		var btn: Button = map_buttons[idx]
+		if idx == current_detail:
+			btn.add_theme_color_override("font_color", Color(0.35, 1.0, 0.45))
+			btn.disabled = true
+		else:
+			btn.remove_theme_color_override("font_color")
+			btn.disabled = false
 
 func _build_banner() -> void:
 	banner = _make_label("")
@@ -351,6 +424,7 @@ func _open_detail(i: int) -> void:
 	detail_label.text = "%s  —  look closely for a cheater" % ROOM_NAMES[i]
 	detail_view.visible = true
 	monitor_screen.visible = false
+	_update_map_highlight()
 	# Turn on webcam gesture detection while this camera screen is open. The call
 	# runs inside the click that opened the screen, so the browser allows the prompt.
 	if gesture_input != null:
