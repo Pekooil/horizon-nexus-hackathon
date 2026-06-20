@@ -1,0 +1,22 @@
+[gd_scene format=3 uid="uid://do33ra4lpy1sv"]
+
+[ext_resource type="Script" uid="uid://0e1jsenx7k68" path="res://scripts/room.gd" id="1_7sa2y"]
+[ext_resource type="Script" uid="uid://c7fh3kbo6xv7b" path="res://scripts/room_background.gd" id="2_sf7up"]
+[ext_resource type="PackedScene" uid="uid://bo875kptdmb4c" path="res://scenes/CasinoPlayer.tscn" id="3_xhlaj"]
+
+[node name="Room" type="Node2D" unique_id=1534989460]
+script = ExtResource("1_7sa2y")
+
+[node name="RoomBackground" type="Node2D" parent="." unique_id=1559486721]
+script = ExtResource("2_sf7up")
+
+[node name="Seats" type="Node2D" parent="." unique_id=1434642311]
+
+[node name="Seat1" parent="Seats" unique_id=293309793 instance=ExtResource("3_xhlaj")]
+position = Vector2(120, 168)
+
+[node name="Seat2" parent="Seats" unique_id=609365187 instance=ExtResource("3_xhlaj")]
+position = Vector2(240, 158)
+
+[node name="Seat3" parent="Seats" unique_id=603024154 instance=ExtResource("3_xhlaj")]
+position = Vector2(360, 168)

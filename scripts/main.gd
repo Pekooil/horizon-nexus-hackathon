@@ -5,7 +5,15 @@ extends Control
 const ROOM_COUNT := 6
 const FEED_RENDER_SIZE := Vector2i(960, 540)
 const ROOM_BASE_SIZE := Vector2(480.0, 270.0)
-const ROOM_SCENE := preload("res://scenes/Room.tscn")
+const ROOM_SCENES: Array[PackedScene] = [
+	preload("res://scenes/Rooms/Entrance.tscn"),
+	preload("res://scenes/Rooms/Bar.tscn"),
+	preload("res://scenes/Rooms/Lounge.tscn"),
+	preload("res://scenes/Rooms/Poker.tscn"),
+	preload("res://scenes/Rooms/Roulette.tscn"),
+	preload("res://scenes/Rooms/Slot Machines.tscn"),
+]
+const ROOM_NAMES := ["Entrance", "Bar", "Lounge", "Poker", "Roulette", "Slot Machines"]
 const MonitorQuad = preload("res://scripts/monitor_quad.gd")
 const MONEY_SYMBOL_TEXTURE := preload("res://assets/money_digits/money.png")
 const MONEY_DOT_TEXTURE := preload("res://assets/money_digits/dot.png")
@@ -100,7 +108,7 @@ func _build_feeds() -> void:
 		vp.transparent_bg = false
 		holder.add_child(vp)        # must be in tree before get_texture()
 
-		var room := ROOM_SCENE.instantiate() as Room
+		var room := ROOM_SCENES[i].instantiate() as Room
 		room.room_id = i + 1        # set before add_child so _ready() sees it
 		room.scale = Vector2(
 			FEED_RENDER_SIZE.x / ROOM_BASE_SIZE.x,
@@ -237,7 +245,7 @@ func _spawn_ferret() -> void:
 func _open_detail(i: int) -> void:
 	current_detail = i
 	detail_texture.texture = feeds[i].get_texture()
-	detail_label.text = "CAM %d  —  look closely for a cheater" % (i + 1)
+	detail_label.text = "%s  —  look closely for a cheater" % ROOM_NAMES[i]
 	detail_view.visible = true
 	monitor_screen.visible = false
 
