@@ -30,6 +30,11 @@ const ENTRANCE_ROOM := 0
 const MonitorQuad = preload("res://scripts/monitor_quad.gd")
 const CHUNKY_FONT = preload("res://assets/ChunkyRetro-6YmnD.otf")
 const MANROPE_FONT = preload("res://assets/fonts/Manrope-Medium.ttf")
+const CAMERA_OPEN_SOUND = preload("res://assets/camera-open.wav")
+const CAMERA_CLOSE_SOUND = preload("res://assets/camera-close.wav")
+const DAY_MUSIC = preload("res://assets/ProceduralProblems.mp3")
+const DAY_MUSIC_VOLUME_DB := -8.0
+const DAY_MUSIC_MUTED_DB := -40.0
 const POLAROID_TEXTURE = preload("res://assets/polaroid.png")
 const FILM_TEXTURE = preload("res://assets/film.png")
 const MONEY_SYMBOL_TEXTURE := preload("res://assets/money_digits/money.png")
@@ -87,6 +92,9 @@ var map_panel: Control
 var map_buttons := {}   # room_idx -> Button on the floor map
 var current_detail := -1
 var spawn_timer := 4.0
+var music_player: AudioStreamPlayer
+var camera_open_player: AudioStreamPlayer
+var camera_close_player: AudioStreamPlayer
 
 # Web-only: webcam "frame" gesture trigger for taking a photo (see
 # scripts/gesture_input_web.gd). Null on native platforms.
@@ -108,6 +116,9 @@ func _ready() -> void:
 	_build_intro_overlay()
 	intro_overlay.visible = true
 	intro_overlay.modulate.a = 1.0
+	_build_music_player()
+	_build_camera_open_player()
+	_build_camera_close_player()
 	_build_camera_indicator()
 	_setup_gesture_input()
 
@@ -347,14 +358,28 @@ func _build_overlay() -> void:
 	overlay.add_child(dim)
 
 	var vb := VBoxContainer.new()
+	vb.layout_mode = 1
 	vb.set_anchors_preset(Control.PRESET_CENTER)
+	vb.anchor_left = 0.5
+	vb.anchor_top = 0.5
+	vb.anchor_right = 0.5
+	vb.anchor_bottom = 0.5
+	vb.offset_left = -360
+	vb.offset_top = -140
+	vb.offset_right = 360
+	vb.offset_bottom = 140
 	vb.alignment = BoxContainer.ALIGNMENT_CENTER
+	vb.size_flags_horizontal = Control.SIZE_SHRINK_CENTER
+	vb.size_flags_vertical = Control.SIZE_SHRINK_CENTER
 	vb.add_theme_constant_override("separation", 24)
 	overlay.add_child(vb)
 
 	overlay_label = _make_label("")
+	overlay_label.custom_minimum_size = Vector2(720, 120)
 	overlay_label.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
-	overlay_label.add_theme_font_size_override("font_size", 52)
+	overlay_label.vertical_alignment = VERTICAL_ALIGNMENT_CENTER
+	overlay_label.add_theme_font_override("font", CHUNKY_FONT)
+	overlay_label.add_theme_font_size_override("font_size", 82)
 	vb.add_child(overlay_label)
 
 	var restart := Button.new()
@@ -369,6 +394,29 @@ func _build_flash() -> void:
 	flash.set_anchors_preset(Control.PRESET_FULL_RECT)
 	flash.mouse_filter = Control.MOUSE_FILTER_IGNORE
 	add_child(flash)
+
+func _build_music_player() -> void:
+	music_player = AudioStreamPlayer.new()
+	music_player.stream = DAY_MUSIC
+	music_player.autoplay = false
+	music_player.volume_db = DAY_MUSIC_MUTED_DB
+	add_child(music_player)
+	if music_player.stream is AudioStreamMP3:
+		(music_player.stream as AudioStreamMP3).loop = true
+
+func _build_camera_open_player() -> void:
+	camera_open_player = AudioStreamPlayer.new()
+	camera_open_player.stream = CAMERA_OPEN_SOUND
+	camera_open_player.autoplay = false
+	camera_open_player.volume_db = -6.0
+	add_child(camera_open_player)
+
+func _build_camera_close_player() -> void:
+	camera_close_player = AudioStreamPlayer.new()
+	camera_close_player.stream = CAMERA_CLOSE_SOUND
+	camera_close_player.autoplay = false
+	camera_close_player.volume_db = -6.0
+	add_child(camera_close_player)
 
 func _build_intro_overlay() -> void:
 	intro_overlay = Control.new()
@@ -407,11 +455,11 @@ func _build_intro_overlay() -> void:
 	var day_row := HBoxContainer.new()
 	day_row.layout_mode = 0
 	day_row.offset_left = 0.0
-	day_row.offset_top = 255.0
+	day_row.offset_top = 285.0
 	day_row.offset_right = 1200.0
-	day_row.offset_bottom = 380.0
+	day_row.offset_bottom = 410.0
 	day_row.alignment = BoxContainer.ALIGNMENT_CENTER
-	day_row.add_theme_constant_override("separation", 18)
+	day_row.add_theme_constant_override("separation", 6)
 	intro_day_card.add_child(day_row)
 
 	var intro_polaroid := TextureRect.new()
@@ -580,6 +628,8 @@ func _open_detail(i: int) -> void:
 	detail_label.text = "%s  —  look closely for a cheater" % ROOM_NAMES[_screen_to_room(i)]
 	detail_view.visible = true
 	monitor_screen.visible = false
+	if camera_open_player != null:
+		camera_open_player.play()
 	_update_map_highlight()
 	# Turn on webcam gesture detection while this camera screen is open. The call
 	# runs inside the click that opened the screen, so the browser allows the prompt.
@@ -593,6 +643,8 @@ func _close_detail() -> void:
 	monitor_screen.visible = true
 	mouse_default_cursor_shape = CURSOR_ARROW
 	current_detail = -1
+	if camera_close_player != null:
+		camera_close_player.play()
 	# Stop detecting once the player is back on the monitor wall.
 	if gesture_input != null:
 		gesture_input.stop_camera()
@@ -633,6 +685,7 @@ func _on_money_changed(amount: float) -> void:
 		money_sprites[i].texture = money_chars[i]
 
 func _on_night_changed(night: int) -> void:
+	await _fade_out_day_music()
 	night_label.text = "Night %d / %d" % [night, GameManager.MAX_NIGHTS]
 	for r in rooms:
 		r.reset_players()
@@ -677,10 +730,11 @@ func _flash_camera_indicator() -> void:
 	t.tween_property(camera_label, "modulate", Color(1, 1, 1), 0.4)
 
 func _on_game_over(won: bool) -> void:
-	overlay_label.text = "YOU SURVIVED!" if won else "GAME OVER"
+	overlay_label.text = "You Survived!" if won else "Game Over"
 	overlay_label.add_theme_color_override(
 		"font_color", Color(0.6, 1, 0.6) if won else Color(1, 0.45, 0.45))
 	overlay.visible = true
+	_stop_day_music()
 
 # --- helpers ----------------------------------------------------------------
 
@@ -694,6 +748,30 @@ func _play_flash() -> void:
 	flash.color.a = 0.9
 	var t := create_tween()
 	t.tween_property(flash, "color:a", 0.0, 0.35)
+
+func _fade_in_day_music() -> void:
+	if music_player == null:
+		return
+	if not music_player.playing:
+		music_player.volume_db = DAY_MUSIC_MUTED_DB
+		music_player.play()
+	var tween := create_tween()
+	tween.tween_property(music_player, "volume_db", DAY_MUSIC_VOLUME_DB, 1.2)
+
+func _fade_out_day_music() -> void:
+	if music_player == null or not music_player.playing:
+		return
+	var tween := create_tween()
+	tween.tween_property(music_player, "volume_db", DAY_MUSIC_MUTED_DB, 1.0)
+	await tween.finished
+	music_player.stop()
+
+func _stop_day_music() -> void:
+	if music_player == null or not music_player.playing:
+		return
+	var tween := create_tween()
+	tween.tween_property(music_player, "volume_db", DAY_MUSIC_MUTED_DB, 0.8)
+	tween.tween_callback(func(): music_player.stop())
 
 func _show_banner(text: String) -> void:
 	banner.text = text
@@ -736,6 +814,7 @@ func _play_night_intro(night: int) -> void:
 	else:
 		await get_tree().create_timer(0.9).timeout
 
+	_fade_in_day_music()
 	var fade_out := create_tween()
 	fade_out.tween_property(intro_overlay, "modulate:a", 0.0, 1.6)
 	await fade_out.finished
