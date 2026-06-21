@@ -411,27 +411,27 @@ func _build_intro_overlay() -> void:
 	day_row.offset_right = 1200.0
 	day_row.offset_bottom = 380.0
 	day_row.alignment = BoxContainer.ALIGNMENT_CENTER
-	day_row.add_theme_constant_override("separation", 36)
+	day_row.add_theme_constant_override("separation", 18)
 	intro_day_card.add_child(day_row)
 
-		var intro_polaroid := TextureRect.new()
-		intro_polaroid.custom_minimum_size = Vector2(138, 138)
-		intro_polaroid.texture = POLAROID_TEXTURE
-		intro_polaroid.expand_mode = TextureRect.EXPAND_IGNORE_SIZE
-		intro_polaroid.stretch_mode = TextureRect.STRETCH_KEEP_ASPECT_CENTERED
-		day_row.add_child(intro_polaroid)
+	var intro_polaroid := TextureRect.new()
+	intro_polaroid.custom_minimum_size = Vector2(138, 138)
+	intro_polaroid.texture = POLAROID_TEXTURE
+	intro_polaroid.expand_mode = TextureRect.EXPAND_IGNORE_SIZE
+	intro_polaroid.stretch_mode = TextureRect.STRETCH_KEEP_ASPECT_CENTERED
+	day_row.add_child(intro_polaroid)
 
 	var intro_film_row := HBoxContainer.new()
 	intro_film_row.alignment = BoxContainer.ALIGNMENT_CENTER
 	intro_film_row.add_theme_constant_override("separation", 6)
 	day_row.add_child(intro_film_row)
 
-		for i in GameManager.PHOTOS_PER_NIGHT:
-			var intro_film := TextureRect.new()
-			intro_film.custom_minimum_size = Vector2(46, 74)
-			intro_film.texture = FILM_TEXTURE
-			intro_film.expand_mode = TextureRect.EXPAND_IGNORE_SIZE
-			intro_film.stretch_mode = TextureRect.STRETCH_KEEP_ASPECT_CENTERED
+	for i in GameManager.PHOTOS_PER_NIGHT:
+		var intro_film := TextureRect.new()
+		intro_film.custom_minimum_size = Vector2(46, 74)
+		intro_film.texture = FILM_TEXTURE
+		intro_film.expand_mode = TextureRect.EXPAND_IGNORE_SIZE
+		intro_film.stretch_mode = TextureRect.STRETCH_KEEP_ASPECT_CENTERED
 		intro_film_row.add_child(intro_film)
 		intro_day_films.append(intro_film)
 
