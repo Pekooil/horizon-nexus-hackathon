@@ -2,21 +2,33 @@
 
 [ext_resource type="Script" uid="uid://0e1jsenx7k68" path="res://scripts/room.gd" id="1_oe7il"]
 [ext_resource type="Script" uid="uid://c7fh3kbo6xv7b" path="res://scripts/room_background.gd" id="2_lx35x"]
-[ext_resource type="PackedScene" uid="uid://bo875kptdmb4c" path="res://scenes/CasinoPlayer.tscn" id="3_yltfi"]
+[ext_resource type="PackedScene" path="res://scenes/CasinoPlayerBack.tscn" id="3_yltfi"]
+[ext_resource type="Texture2D" path="res://assets/rooms-roulette.png" id="4_roulette"]
+[ext_resource type="PackedScene" path="res://scenes/CasinoPlayerPokerFront.tscn" id="5_front"]
 
 [node name="Room" type="Node2D" unique_id=1534989460]
 script = ExtResource("1_oe7il")
 
 [node name="RoomBackground" type="Node2D" parent="." unique_id=1559486721]
 script = ExtResource("2_lx35x")
+background_texture = ExtResource("4_roulette")
 
 [node name="Seats" type="Node2D" parent="." unique_id=1434642311]
 
 [node name="Seat1" parent="Seats" unique_id=293309793 instance=ExtResource("3_yltfi")]
-position = Vector2(120, 168)
+position = Vector2(112, 236)
 
 [node name="Seat2" parent="Seats" unique_id=609365187 instance=ExtResource("3_yltfi")]
-position = Vector2(240, 158)
+position = Vector2(240, 236)
 
 [node name="Seat3" parent="Seats" unique_id=603024154 instance=ExtResource("3_yltfi")]
-position = Vector2(360, 168)
+position = Vector2(368, 236)
+
+[node name="Seat4" parent="Seats" instance=ExtResource("5_front")]
+position = Vector2(112, 154)
+
+[node name="Seat5" parent="Seats" instance=ExtResource("5_front")]
+position = Vector2(240, 154)
+
+[node name="Seat6" parent="Seats" instance=ExtResource("5_front")]
+position = Vector2(344, 154)

@@ -136,6 +136,7 @@ expand_mode = 1
 stretch_mode = 5
 
 [node name="Background" type="ColorRect" parent="MonitorScreen" unique_id=708016583]
+visible = false
 layout_mode = 1
 anchors_preset = 15
 anchor_right = 1.0
@@ -167,11 +168,11 @@ texture = ExtResource("4_moneybar")
 
 [node name="Money" type="HBoxContainer" parent="MonitorScreen" unique_id=1503927125]
 layout_mode = 0
-offset_left = 1346.0001
-offset_top = 67.00001
-offset_right = 1560.0001
-offset_bottom = 105.00001
-scale = Vector2(2.0847325, 2.0847325)
+offset_left = 1339.0001
+offset_top = 53.0
+offset_right = 1553.0001
+offset_bottom = 91.0
+scale = Vector2(2.1730814, 2.8935506)
 theme_override_constants/separation = 2
 
 [node name="Symbol" type="TextureRect" parent="MonitorScreen/Money" unique_id=123056045]

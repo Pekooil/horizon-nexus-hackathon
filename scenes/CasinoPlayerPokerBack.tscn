@@ -1,16 +1,20 @@
-[gd_scene format=3 uid="uid://bo875kptdmb4c"]
+[gd_scene format=3]
 
 [ext_resource type="Script" path="res://scripts/casino_player.gd" id="1_player"]
-[ext_resource type="Texture2D" path="res://assets/ferret-head.png" id="2_head"]
+[ext_resource type="Texture2D" path="res://assets/ferret-back.png" id="2_head"]
 [ext_resource type="Texture2D" path="res://icon.svg" id="3_icon"]
+[ext_resource type="Texture2D" path="res://assets/raccoon-back.png" id="4_bad"]
 
-[node name="CasinoPlayer" type="Node2D"]
+[node name="CasinoPlayerPokerBack" type="Node2D"]
 script = ExtResource("1_player")
+good_head_texture = ExtResource("2_head")
+bad_head_texture = ExtResource("4_bad")
+head_size = Vector2(40, 30)
 
 [node name="Body" type="Sprite2D" parent="."]
-position = Vector2(0, -18)
+position = Vector2(0, -24)
 texture = ExtResource("2_head")
-scale = Vector2(0.12535612, 0.1588785)
+scale = Vector2(0.11396012, 0.14018692)
 
 [node name="Tell" type="Sprite2D" parent="."]
 visible = false
@@ -21,7 +25,7 @@ self_modulate = Color(1, 0.85, 0.2, 1)
 
 [node name="Caught" type="Sprite2D" parent="."]
 visible = false
-position = Vector2(0, -16)
+position = Vector2(0, -22)
 texture = ExtResource("3_icon")
-scale = Vector2(0.34, 0.34)
+scale = Vector2(0.3, 0.3)
 self_modulate = Color(1, 0.25, 0.25, 0.7)

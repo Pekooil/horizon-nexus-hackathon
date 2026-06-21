@@ -14,7 +14,7 @@ const ROOM_SCENES: Array[PackedScene] = [
 	preload("res://scenes/Rooms/Slot Machines.tscn"),
 ]
 const ROOM_NAMES := ["Entrance", "Bar", "Lounge", "Poker", "Roulette", "Slot Machines"]
-const SCREEN_TO_ROOM := [0, 2, 3, 4, 1, 5]
+const SCREEN_TO_ROOM := [0, 4, 3, 2, 1, 5]
 # Map of the casino floor, indexed the same as ROOM_NAMES/ROOM_SCENES:
 # Entrance -> Bar -> {Lounge, Poker, Roulette}, with Poker/Roulette also
 # linked to each other via the Slot Machines room.
@@ -27,7 +27,6 @@ const ROOM_GRAPH := {
 	5: [3, 4],       # Slot Machines -> Poker, Roulette
 }
 const ENTRANCE_ROOM := 0
-const CHARACTER_COUNT := 9
 const MonitorQuad = preload("res://scripts/monitor_quad.gd")
 const MONEY_SYMBOL_TEXTURE := preload("res://assets/money_digits/money.png")
 const MONEY_DOT_TEXTURE := preload("res://assets/money_digits/dot.png")
@@ -357,14 +356,40 @@ func _setup_gesture_input() -> void:
 
 # --- gameplay ---------------------------------------------------------------
 
-## Empties every room and rebuilds the roster: 3 characters seated in the
-## Entrance, the rest queued to walk in as soon as an Entrance seat frees up.
+## Keeps the casino lively without completely locking movement by leaving a few
+## seats open for hourly shuffling between rooms.
+func _target_character_count() -> int:
+	return maxi(18, _seat_capacity_total() - 4)
+
+func _seat_capacity_total() -> int:
+	var total := 0
+	for room in rooms:
+		total += room.players.size()
+	return total
+
+## Empties every room and rebuilds the roster, distributing patrons across the
+## casino in seat-order rounds so larger rooms like Poker and Roulette don't
+## look empty just because everyone starts at the Entrance.
 func _reset_characters() -> void:
 	characters.clear()
-	for id in CHARACTER_COUNT:
+	var target_count := _target_character_count()
+	for id in target_count:
 		characters.append({"id": id, "room": -1, "seat": null})
-	for i in range(mini(3, CHARACTER_COUNT)):
-		_place_character(characters[i], ENTRANCE_ROOM)
+	var next_character := 0
+	var seat_round := 0
+	while next_character < target_count:
+		var placed_this_round := false
+		for room_idx in ROOM_COUNT:
+			if rooms[room_idx].players.size() <= seat_round:
+				continue
+			if _place_character(characters[next_character], room_idx):
+				next_character += 1
+				placed_this_round = true
+				if next_character >= target_count:
+					break
+		if not placed_this_round:
+			break
+		seat_round += 1
 
 func _place_character(ch: Dictionary, room_idx: int) -> bool:
 	var seat := rooms[room_idx].free_seat()

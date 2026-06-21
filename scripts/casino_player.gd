@@ -6,6 +6,14 @@ class_name CasinoPlayer
 ##   Tell  - the ferret giveaway (ears/tail/etc.), shown only while cheating
 ##   Caught - the "busted" marker, shown after being photographed
 
+const DEFAULT_GOOD_HEAD := preload("res://assets/ferret-head.png")
+const DEFAULT_BAD_HEAD := preload("res://assets/raccoon-head.png")
+
+@export var good_head_texture: Texture2D = DEFAULT_GOOD_HEAD
+@export var bad_head_texture: Texture2D = DEFAULT_BAD_HEAD
+@export var head_size := Vector2(44.0, 34.0)
+
+@onready var body: Sprite2D = $Body
 @onready var tell: Node2D = $Tell
 @onready var caught_mark: Node2D = $Caught
 
@@ -50,7 +58,13 @@ func reset() -> void:
 
 func _refresh() -> void:
 	visible = occupied
+	if body:
+		body.texture = bad_head_texture if is_ferret and not caught else good_head_texture
+		body.scale = Vector2(
+			head_size.x / body.texture.get_width(),
+			head_size.y / body.texture.get_height(),
+		)
 	if tell:
-		tell.visible = is_ferret and not caught
+		tell.visible = false
 	if caught_mark:
 		caught_mark.visible = caught

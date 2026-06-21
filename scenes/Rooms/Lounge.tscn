@@ -20,3 +20,12 @@ position = Vector2(240, 158)
 
 [node name="Seat3" parent="Seats" unique_id=603024154 instance=ExtResource("3_player")]
 position = Vector2(360, 168)
+
+[node name="Seat4" parent="Seats" instance=ExtResource("3_player")]
+position = Vector2(80, 176)
+
+[node name="Seat5" parent="Seats" instance=ExtResource("3_player")]
+position = Vector2(240, 140)
+
+[node name="Seat6" parent="Seats" instance=ExtResource("3_player")]
+position = Vector2(400, 176)

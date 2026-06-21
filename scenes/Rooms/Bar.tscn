@@ -15,10 +15,10 @@ background_texture = ExtResource("4_bar")
 [node name="Seats" type="Node2D" parent="." unique_id=1434642311]
 
 [node name="Seat1" parent="Seats" unique_id=293309793 instance=ExtResource("3_ov56q")]
-position = Vector2(120, 168)
+position = Vector2(56, 178)
 
 [node name="Seat2" parent="Seats" unique_id=609365187 instance=ExtResource("3_ov56q")]
-position = Vector2(240, 158)
+position = Vector2(240, 178)
 
 [node name="Seat3" parent="Seats" unique_id=603024154 instance=ExtResource("3_ov56q")]
-position = Vector2(360, 168)
+position = Vector2(422, 178)

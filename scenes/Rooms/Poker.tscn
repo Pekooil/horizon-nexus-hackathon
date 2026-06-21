@@ -2,8 +2,9 @@
 
 [ext_resource type="Script" uid="uid://0e1jsenx7k68" path="res://scripts/room.gd" id="1_5hlaq"]
 [ext_resource type="Script" uid="uid://c7fh3kbo6xv7b" path="res://scripts/room_background.gd" id="2_d6xrr"]
-[ext_resource type="PackedScene" uid="uid://bo875kptdmb4c" path="res://scenes/CasinoPlayer.tscn" id="3_dw1qw"]
+[ext_resource type="PackedScene" path="res://scenes/CasinoPlayerPokerBack.tscn" id="3_dw1qw"]
 [ext_resource type="Texture2D" path="res://assets/rooms-poker.png" id="4_poker"]
+[ext_resource type="PackedScene" path="res://scenes/CasinoPlayerPokerFront.tscn" id="5_front"]
 
 [node name="Room" type="Node2D" unique_id=1534989460]
 script = ExtResource("1_5hlaq")
@@ -15,10 +16,25 @@ background_texture = ExtResource("4_poker")
 [node name="Seats" type="Node2D" parent="." unique_id=1434642311]
 
 [node name="Seat1" parent="Seats" unique_id=293309793 instance=ExtResource("3_dw1qw")]
-position = Vector2(120, 168)
+position = Vector2(132, 238)
 
 [node name="Seat2" parent="Seats" unique_id=609365187 instance=ExtResource("3_dw1qw")]
-position = Vector2(240, 158)
+position = Vector2(228, 246)
 
 [node name="Seat3" parent="Seats" unique_id=603024154 instance=ExtResource("3_dw1qw")]
-position = Vector2(360, 168)
+position = Vector2(348, 238)
+
+[node name="Seat4" parent="Seats" instance=ExtResource("5_front")]
+position = Vector2(156, 118)
+
+[node name="Seat5" parent="Seats" instance=ExtResource("5_front")]
+position = Vector2(240, 112)
+
+[node name="Seat6" parent="Seats" instance=ExtResource("5_front")]
+position = Vector2(328, 116)
+
+[node name="Seat7" parent="Seats" instance=ExtResource("5_front")]
+position = Vector2(76, 168)
+
+[node name="Seat8" parent="Seats" instance=ExtResource("5_front")]
+position = Vector2(404, 168)
