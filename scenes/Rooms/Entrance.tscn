@@ -3,12 +3,14 @@
 [ext_resource type="Script" uid="uid://0e1jsenx7k68" path="res://scripts/room.gd" id="1_7sa2y"]
 [ext_resource type="Script" uid="uid://c7fh3kbo6xv7b" path="res://scripts/room_background.gd" id="2_sf7up"]
 [ext_resource type="PackedScene" uid="uid://bo875kptdmb4c" path="res://scenes/CasinoPlayer.tscn" id="3_xhlaj"]
+[ext_resource type="Texture2D" path="res://assets/rooms-entrance.png" id="4_entrance"]
 
 [node name="Room" type="Node2D" unique_id=1534989460]
 script = ExtResource("1_7sa2y")
 
 [node name="RoomBackground" type="Node2D" parent="." unique_id=1559486721]
 script = ExtResource("2_sf7up")
+background_texture = ExtResource("4_entrance")
 
 [node name="Seats" type="Node2D" parent="." unique_id=1434642311]
 

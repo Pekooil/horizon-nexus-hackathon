@@ -14,6 +14,7 @@ const ROOM_SCENES: Array[PackedScene] = [
 	preload("res://scenes/Rooms/Slot Machines.tscn"),
 ]
 const ROOM_NAMES := ["Entrance", "Bar", "Lounge", "Poker", "Roulette", "Slot Machines"]
+const SCREEN_TO_ROOM := [0, 2, 3, 4, 1, 5]
 # Map of the casino floor, indexed the same as ROOM_NAMES/ROOM_SCENES:
 # Entrance -> Bar -> {Lounge, Poker, Roulette}, with Poker/Roulette also
 # linked to each other via the Slot Machines room.
@@ -50,6 +51,8 @@ const MONEY_DIGIT_TEXTURES := {
 @onready var night_label: Label = $MonitorScreen/TopBar/Night
 @onready var clock_label: Label = $MonitorScreen/TopBar/Clock
 @onready var photos_label: Label = $MonitorScreen/TopBar/Photos
+@onready var clock_hour_hand: Sprite2D = $MonitorScreen/ClockArt/HourHand
+@onready var clock_minute_hand: Sprite2D = $MonitorScreen/ClockArt/MinuteHand
 
 var feeds: Array[SubViewport] = []   # the off-screen render targets (textures)
 var rooms: Array[Room] = []          # the editable room contents (game logic)
@@ -97,6 +100,7 @@ func _ready() -> void:
 	GameManager.game_over.connect(_on_game_over)
 
 	GameManager.start_game()
+	_update_clock_visual()
 
 func _unhandled_input(event: InputEvent) -> void:
 	if detail_view != null and detail_view.visible:
@@ -125,7 +129,10 @@ func _build_feeds() -> void:
 	var holder := Node.new()
 	holder.name = "Feeds"
 	add_child(holder)
+	feeds.resize(ROOM_COUNT)
+	rooms.resize(ROOM_COUNT)
 	for i in ROOM_COUNT:
+		var room_idx: int = SCREEN_TO_ROOM[i]
 		# Wrap the editable Room scene in a SubViewport so it renders to a texture.
 		var vp := SubViewport.new()
 		vp.size = FEED_RENDER_SIZE
@@ -133,16 +140,16 @@ func _build_feeds() -> void:
 		vp.transparent_bg = false
 		holder.add_child(vp)        # must be in tree before get_texture()
 
-		var room := ROOM_SCENES[i].instantiate() as Room
-		room.room_id = i + 1        # set before add_child so _ready() sees it
+		var room := ROOM_SCENES[room_idx].instantiate() as Room
+		room.room_id = room_idx + 1        # set before add_child so _ready() sees it
 		room.scale = Vector2(
 			FEED_RENDER_SIZE.x / ROOM_BASE_SIZE.x,
 			FEED_RENDER_SIZE.y / ROOM_BASE_SIZE.y,
 		)
 		vp.add_child(room)
 
-		feeds.append(vp)
-		rooms.append(room)
+		feeds[i] = vp
+		rooms[room_idx] = room
 
 func _bind_monitors() -> void:
 	for i in ROOM_COUNT:
@@ -263,16 +270,17 @@ func _build_map() -> void:
 		btn.add_theme_font_size_override("font_size", 12)
 		btn.clip_text = true
 		btn.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
-		btn.pressed.connect(_open_detail.bind(idx))
+		btn.pressed.connect(_open_detail.bind(_room_to_screen(idx)))
 		grid.add_child(btn)
 		map_buttons[idx] = btn
 
 ## Highlights the room currently shown full-screen and disables its map cell so
 ## it reads as "you are here" and can't re-trigger itself.
 func _update_map_highlight() -> void:
+	var current_room := _screen_to_room(current_detail) if current_detail >= 0 else -1
 	for idx in map_buttons:
 		var btn: Button = map_buttons[idx]
-		if idx == current_detail:
+		if idx == current_room:
 			btn.add_theme_color_override("font_color", Color(0.35, 1.0, 0.45))
 			btn.disabled = true
 		else:
@@ -421,7 +429,7 @@ func _spawn_ferret() -> void:
 func _open_detail(i: int) -> void:
 	current_detail = i
 	detail_texture.texture = feeds[i].get_texture()
-	detail_label.text = "%s  —  look closely for a cheater" % ROOM_NAMES[i]
+	detail_label.text = "%s  —  look closely for a cheater" % ROOM_NAMES[_screen_to_room(i)]
 	detail_view.visible = true
 	monitor_screen.visible = false
 	_update_map_highlight()
@@ -449,7 +457,7 @@ func _take_photo() -> void:
 		detail_label.text = "Out of film! No photos left tonight."
 		return
 	_play_flash()
-	var ferret := rooms[current_detail].get_active_ferret()
+	var ferret := rooms[_screen_to_room(current_detail)].get_active_ferret()
 	if ferret:
 		ferret.mark_caught()
 		GameManager.catch_ferret(ferret)
@@ -486,6 +494,7 @@ func _on_night_changed(night: int) -> void:
 
 func _on_clock_changed(text: String) -> void:
 	clock_label.text = text
+	_update_clock_visual()
 
 func _on_photos_changed(count: int) -> void:
 	photos_label.text = "Photos: %d" % count
@@ -549,3 +558,18 @@ func _get_screen_at_point(point: Vector2) -> int:
 		if screen != null and screen.contains_global_point(point):
 			return i
 	return -1
+
+func _screen_to_room(screen_idx: int) -> int:
+	if screen_idx < 0 or screen_idx >= SCREEN_TO_ROOM.size():
+		return 0
+	return SCREEN_TO_ROOM[screen_idx]
+
+func _room_to_screen(room_idx: int) -> int:
+	return SCREEN_TO_ROOM.find(room_idx)
+
+func _update_clock_visual() -> void:
+	var elapsed_hours := (GameManager.NIGHT_DURATION - GameManager.night_time_left) / GameManager.SECONDS_PER_HOUR
+	var hour_rotation_deg := -90.0 + (elapsed_hours * 30.0)
+	var minute_rotation_deg := fmod(elapsed_hours * 360.0, 360.0)
+	clock_hour_hand.rotation_degrees = hour_rotation_deg
+	clock_minute_hand.rotation_degrees = minute_rotation_deg

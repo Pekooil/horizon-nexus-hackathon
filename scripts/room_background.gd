@@ -6,15 +6,19 @@ class_name RoomBackground
 ## Delete this node and drop in your own Sprite2D/TextureRect when you have art.
 
 var room_id := 0
+@export var background_texture: Texture2D
 
 func _draw() -> void:
+	if background_texture != null:
+		draw_texture_rect(background_texture, Rect2(0, 0, 480, 270), false)
+	else:
 	# wall
-	draw_rect(Rect2(0, 0, 480, 270), Color(0.10, 0.09, 0.13))
-	# floor strip
-	draw_rect(Rect2(0, 212, 480, 58), Color(0.17, 0.13, 0.10))
-	# green felt table
-	draw_rect(Rect2(56, 150, 368, 78), Color(0.07, 0.34, 0.18))
-	draw_rect(Rect2(56, 150, 368, 78), Color(0.30, 0.22, 0.10), false, 4.0)
+		draw_rect(Rect2(0, 0, 480, 270), Color(0.10, 0.09, 0.13))
+		# floor strip
+		draw_rect(Rect2(0, 212, 480, 58), Color(0.17, 0.13, 0.10))
+		# green felt table
+		draw_rect(Rect2(56, 150, 368, 78), Color(0.07, 0.34, 0.18))
+		draw_rect(Rect2(56, 150, 368, 78), Color(0.30, 0.22, 0.10), false, 4.0)
 
 	# security-feed label, top-left
 	var font := ThemeDB.fallback_font
