@@ -8,14 +8,17 @@ class_name CasinoPlayer
 
 const DEFAULT_GOOD_HEAD := preload("res://assets/ferret-head.png")
 const DEFAULT_BAD_HEAD := preload("res://assets/raccoon-head.png")
+const DEFAULT_CAUGHT_HEAD := preload("res://assets/raccoon-caught.png")
 
 @export var good_head_texture: Texture2D = DEFAULT_GOOD_HEAD
 @export var bad_head_texture: Texture2D = DEFAULT_BAD_HEAD
 @export var head_size := Vector2(44.0, 34.0)
+@export var caught_texture: Texture2D = DEFAULT_CAUGHT_HEAD
+@export var caught_size := Vector2(44.0, 34.0)
 
 @onready var body: Sprite2D = $Body
 @onready var tell: Node2D = $Tell
-@onready var caught_mark: Node2D = $Caught
+@onready var caught_mark: Sprite2D = $Caught
 
 var occupied := false
 var character_id := -1
@@ -59,12 +62,21 @@ func reset() -> void:
 func _refresh() -> void:
 	visible = occupied
 	if body:
-		body.texture = bad_head_texture if is_ferret and not caught else good_head_texture
-		body.scale = Vector2(
-			head_size.x / body.texture.get_width(),
-			head_size.y / body.texture.get_height(),
-		)
+		body.visible = not caught
+		if not caught:
+			body.texture = bad_head_texture if is_ferret else good_head_texture
+			body.scale = Vector2(
+				head_size.x / body.texture.get_width(),
+				head_size.y / body.texture.get_height(),
+			)
 	if tell:
 		tell.visible = false
 	if caught_mark:
 		caught_mark.visible = caught
+		if caught:
+			caught_mark.texture = caught_texture
+			caught_mark.self_modulate = Color(1.0, 0.45, 0.45, 1.0)
+			caught_mark.scale = Vector2(
+				caught_size.x / caught_mark.texture.get_width(),
+				caught_size.y / caught_mark.texture.get_height(),
+			)

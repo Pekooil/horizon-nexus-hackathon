@@ -15,19 +15,19 @@ background_texture = ExtResource("4_slots")
 [node name="Seats" type="Node2D" parent="." unique_id=1434642311]
 
 [node name="Seat1" parent="Seats" unique_id=293309793 instance=ExtResource("3_player")]
-position = Vector2(88, 136)
+position = Vector2(42, 132)
 
 [node name="Seat2" parent="Seats" unique_id=609365187 instance=ExtResource("3_player")]
-position = Vector2(176, 122)
+position = Vector2(176, 136)
 
 [node name="Seat3" parent="Seats" unique_id=603024154 instance=ExtResource("3_player")]
-position = Vector2(258, 126)
+position = Vector2(262, 118)
 
 [node name="Seat4" parent="Seats" instance=ExtResource("3_player")]
-position = Vector2(368, 130)
+position = Vector2(342, 150)
 
 [node name="Seat5" parent="Seats" instance=ExtResource("3_player")]
-position = Vector2(144, 214)
+position = Vector2(118, 232)
 
 [node name="Seat6" parent="Seats" instance=ExtResource("3_player")]
-position = Vector2(288, 214)
+position = Vector2(270, 232)

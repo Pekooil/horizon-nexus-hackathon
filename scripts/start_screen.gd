@@ -30,10 +30,10 @@ func _on_start_pressed() -> void:
 	$BlackCover.visible = true
 	_fade_out_music()
 	_fade_out_prompt()
+	_play_start_sting()
 	var black_tween := create_tween()
-	black_tween.tween_property($BlackCover, "modulate:a", 1.0, 0.8)
-	await _play_start_sting()
-	await get_tree().create_timer(0.85).timeout
+	black_tween.tween_property($BlackCover, "modulate:a", 1.0, 0.45)
+	await get_tree().create_timer(1.2).timeout
 	get_tree().change_scene_to_file("res://scenes/Main.tscn")
 
 func _start_prompt_pulse() -> void:
@@ -77,11 +77,10 @@ func _play_start_sting() -> void:
 		return
 	start_sting_player.volume_db = START_CLICK_VOLUME_DB
 	start_sting_player.play()
-	await get_tree().create_timer(2.0).timeout
 	var tween := create_tween()
+	tween.tween_interval(2.0)
 	tween.tween_property(start_sting_player, "volume_db", START_SCREEN_MUTED_DB, 0.8)
-	await tween.finished
-	start_sting_player.stop()
+	tween.tween_callback(func(): start_sting_player.stop())
 
 func _process(delta: float) -> void:
 	if not throb_active or starting:

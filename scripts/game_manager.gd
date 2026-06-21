@@ -15,11 +15,11 @@ const NIGHT_HOURS := 6                 # in-game hours per night (12AM -> 6AM)
 const SECONDS_PER_HOUR := 5.0          # real seconds per in-game hour
 const NIGHT_DURATION := NIGHT_HOURS * SECONDS_PER_HOUR   # 30 real seconds per night
 const PHOTOS_PER_NIGHT := 5            # Polaroids available each night
-const START_MONEY := 1000.0
-const PASSIVE_INCOME := 12.0          # $/sec earned when no ferret is active
-const FERRET_DRAIN := 45.0            # $/sec lost per active ferret
+const START_MONEY := 1400.0
+const PASSIVE_INCOME := 14.0          # $/sec earned when no ferret is active
+const FERRET_DRAIN := 36.0            # $/sec lost per active ferret
 const CATCH_BONUS := 150.0            # reward for catching a ferret
-const FALSE_ACCUSE_PENALTY := 120.0   # cost of photographing an innocent
+const FALSE_ACCUSE_PENALTY := 90.0    # cost of photographing an innocent
 
 var money := START_MONEY
 var current_night := 1

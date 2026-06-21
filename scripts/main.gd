@@ -40,14 +40,19 @@ const PAN_SPEED := Vector2(0.55, 0.37)    # drift frequency per axis (rad/s)
 const MonitorQuad = preload("res://scripts/monitor_quad.gd")
 const CHUNKY_FONT = preload("res://assets/ChunkyRetro-6YmnD.otf")
 const MANROPE_FONT = preload("res://assets/fonts/Manrope-Medium.ttf")
-const CAMERA_OPEN_SOUND = preload("res://assets/camera-open.wav")
-const CAMERA_CLOSE_SOUND = preload("res://assets/camera-close.wav")
+const CAMERA_OPEN_SOUND = preload("res://assets/camera-on.mp3")
+const CAMERA_HUM_SOUND = preload("res://assets/camera-hum.mp3")
+const CAMERA_CLOSE_SOUND = preload("res://assets/camera-close.mp3")
+const GAME_OVER_HORN = preload("res://assets/game-over-horn.mp3")
+const WIN_FANFARE = preload("res://assets/win-fanfare.mp3")
+const POLAROID_SHOT_SOUND = preload("res://assets/polaroid-shot.mp3")
 const DAY_MUSIC = preload("res://assets/ProceduralProblems.mp3")
 const DAY_MUSIC_VOLUME_DB := -8.0
 const DAY_MUSIC_MUTED_DB := -40.0
+const MONEY_DISPLAY_TINT := Color8(255, 204, 104)
 const POLAROID_TEXTURE = preload("res://assets/polaroid.png")
+const POLAROID_OVERLAY_TEXTURE = preload("res://assets/polaroid-overlay.png")
 const FILM_TEXTURE = preload("res://assets/film.png")
-const MONEY_SYMBOL_TEXTURE := preload("res://assets/money_digits/money.png")
 const MONEY_DOT_TEXTURE := preload("res://assets/money_digits/dot.png")
 const MONEY_DIGIT_TEXTURES := {
 	"0": preload("res://assets/money_digits/0.png"),
@@ -87,6 +92,7 @@ var detail_pan_time := 0.0            # drives the slow camera drift
 var detail_transitioning := false     # true while the flip open/close plays
 var detail_label: Label
 var photo_btn: Button
+var polaroid_overlay: TextureRect
 var banner: Label
 var flash: ColorRect
 var overlay: Control
@@ -95,21 +101,30 @@ var overlay_label: Label
 var money_sprites: Array[TextureRect] = []
 var film_sprites: Array[TextureRect] = []
 var film_base_positions: Array[Vector2] = []
+var money_display_material: ShaderMaterial
 var intro_overlay: Control
 var intro_day_card: Control
 var intro_day_label: Label
 var intro_instruction_card: CenterContainer
+var intro_instruction_box: VBoxContainer
 var intro_instruction_label: Label
+var intro_instruction_prompt: Label
 var intro_day_films: Array[TextureRect] = []
 var intro_sequence_running := false
 var has_shown_first_time_instructions := false
+var intro_advance_requested := false
+var last_game_won := false
 var map_panel: Control
 var map_buttons := {}   # room_idx -> Button on the floor map
 var current_detail := -1
 var spawn_timer := 4.0
 var music_player: AudioStreamPlayer
 var camera_open_player: AudioStreamPlayer
+var camera_hum_player: AudioStreamPlayer
 var camera_close_player: AudioStreamPlayer
+var game_over_player: AudioStreamPlayer
+var win_player: AudioStreamPlayer
+var polaroid_shot_player: AudioStreamPlayer
 
 # Web-only: webcam "frame" gesture trigger for taking a photo (see
 # scripts/gesture_input_web.gd). Null on native platforms.
@@ -133,7 +148,11 @@ func _ready() -> void:
 	intro_overlay.modulate.a = 1.0
 	_build_music_player()
 	_build_camera_open_player()
+	_build_camera_hum_player()
 	_build_camera_close_player()
+	_build_game_over_player()
+	_build_win_player()
+	_build_polaroid_shot_player()
 	_build_camera_indicator()
 	_setup_gesture_input()
 
@@ -149,6 +168,8 @@ func _ready() -> void:
 
 func _unhandled_input(event: InputEvent) -> void:
 	if intro_sequence_running:
+		if _is_intro_advance_input(event):
+			intro_advance_requested = true
 		return
 	if detail_view != null and detail_view.visible:
 		return
@@ -212,9 +233,12 @@ func _style_hud() -> void:
 
 func _build_money_display() -> void:
 	money_sprites.clear()
+	money_display_material = _make_money_tint_material()
 
 	for child in money_display.get_children():
 		if child is TextureRect:
+			child.modulate = Color.WHITE
+			child.material = money_display_material
 			money_sprites.append(child)
 
 func _build_film_display() -> void:
@@ -279,6 +303,16 @@ func _build_detail_view() -> void:
 	detail_label.offset_top = 24
 	detail_label.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
 	detail_view.add_child(detail_label)
+
+	polaroid_overlay = TextureRect.new()
+	polaroid_overlay.texture = POLAROID_OVERLAY_TEXTURE
+	polaroid_overlay.expand_mode = TextureRect.EXPAND_IGNORE_SIZE
+	polaroid_overlay.stretch_mode = TextureRect.STRETCH_KEEP_ASPECT_CENTERED
+	polaroid_overlay.custom_minimum_size = Vector2(980, 551)
+	polaroid_overlay.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	polaroid_overlay.visible = false
+	polaroid_overlay.z_index = 20
+	detail_view.add_child(polaroid_overlay)
 
 	var bar := HBoxContainer.new()
 	bar.set_anchors_preset(Control.PRESET_BOTTOM_WIDE)
@@ -397,10 +431,10 @@ func _build_overlay() -> void:
 	vb.anchor_top = 0.5
 	vb.anchor_right = 0.5
 	vb.anchor_bottom = 0.5
-	vb.offset_left = -360
-	vb.offset_top = -140
-	vb.offset_right = 360
-	vb.offset_bottom = 140
+	vb.offset_left = -760
+	vb.offset_top = -190
+	vb.offset_right = 760
+	vb.offset_bottom = 190
 	vb.alignment = BoxContainer.ALIGNMENT_CENTER
 	vb.size_flags_horizontal = Control.SIZE_SHRINK_CENTER
 	vb.size_flags_vertical = Control.SIZE_SHRINK_CENTER
@@ -408,17 +442,45 @@ func _build_overlay() -> void:
 	overlay.add_child(vb)
 
 	overlay_label = _make_label("")
-	overlay_label.custom_minimum_size = Vector2(720, 120)
+	overlay_label.custom_minimum_size = Vector2(1320, 260)
 	overlay_label.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
 	overlay_label.vertical_alignment = VERTICAL_ALIGNMENT_CENTER
 	overlay_label.add_theme_font_override("font", CHUNKY_FONT)
-	overlay_label.add_theme_font_size_override("font_size", 82)
+	overlay_label.add_theme_font_size_override("font_size", 252)
 	vb.add_child(overlay_label)
 
 	var restart := Button.new()
-	restart.text = "  Play again  "
-	restart.custom_minimum_size = Vector2(200, 52)
-	restart.pressed.connect(func(): get_tree().reload_current_scene())
+	restart.text = "Play again"
+	restart.custom_minimum_size = Vector2(280, 72)
+	restart.size_flags_horizontal = Control.SIZE_SHRINK_CENTER
+	restart.add_theme_font_override("font", MANROPE_FONT)
+	restart.add_theme_font_size_override("font_size", 30)
+	restart.add_theme_color_override("font_color", Color(0.98, 0.95, 0.9))
+	restart.add_theme_color_override("font_hover_color", Color.WHITE)
+	restart.add_theme_color_override("font_pressed_color", Color.WHITE)
+	var restart_normal := StyleBoxFlat.new()
+	restart_normal.bg_color = Color(0.12, 0.12, 0.14, 0.92)
+	restart_normal.border_color = Color(1.0, 0.8, 0.45, 0.45)
+	restart_normal.set_border_width_all(2)
+	restart_normal.set_corner_radius_all(18)
+	restart_normal.set_content_margin_all(20)
+	var restart_hover := StyleBoxFlat.new()
+	restart_hover.bg_color = Color(0.18, 0.16, 0.12, 0.96)
+	restart_hover.border_color = Color(1.0, 0.83, 0.5, 0.9)
+	restart_hover.set_border_width_all(2)
+	restart_hover.set_corner_radius_all(18)
+	restart_hover.set_content_margin_all(20)
+	var restart_pressed := StyleBoxFlat.new()
+	restart_pressed.bg_color = Color(0.22, 0.18, 0.12, 0.98)
+	restart_pressed.border_color = Color(1.0, 0.83, 0.5, 1.0)
+	restart_pressed.set_border_width_all(2)
+	restart_pressed.set_corner_radius_all(18)
+	restart_pressed.set_content_margin_all(20)
+	restart.add_theme_stylebox_override("normal", restart_normal)
+	restart.add_theme_stylebox_override("hover", restart_hover)
+	restart.add_theme_stylebox_override("pressed", restart_pressed)
+	restart.add_theme_stylebox_override("focus", restart_hover)
+	restart.pressed.connect(_on_restart_pressed)
 	vb.add_child(restart)
 
 func _build_flash() -> void:
@@ -444,12 +506,42 @@ func _build_camera_open_player() -> void:
 	camera_open_player.volume_db = -6.0
 	add_child(camera_open_player)
 
+func _build_camera_hum_player() -> void:
+	camera_hum_player = AudioStreamPlayer.new()
+	camera_hum_player.stream = CAMERA_HUM_SOUND
+	camera_hum_player.autoplay = false
+	camera_hum_player.volume_db = -10.0
+	add_child(camera_hum_player)
+	if camera_hum_player.stream is AudioStreamMP3:
+		(camera_hum_player.stream as AudioStreamMP3).loop = true
+
 func _build_camera_close_player() -> void:
 	camera_close_player = AudioStreamPlayer.new()
 	camera_close_player.stream = CAMERA_CLOSE_SOUND
 	camera_close_player.autoplay = false
 	camera_close_player.volume_db = -6.0
 	add_child(camera_close_player)
+
+func _build_game_over_player() -> void:
+	game_over_player = AudioStreamPlayer.new()
+	game_over_player.stream = GAME_OVER_HORN
+	game_over_player.autoplay = false
+	game_over_player.volume_db = -4.0
+	add_child(game_over_player)
+
+func _build_win_player() -> void:
+	win_player = AudioStreamPlayer.new()
+	win_player.stream = WIN_FANFARE
+	win_player.autoplay = false
+	win_player.volume_db = -4.0
+	add_child(win_player)
+
+func _build_polaroid_shot_player() -> void:
+	polaroid_shot_player = AudioStreamPlayer.new()
+	polaroid_shot_player.stream = POLAROID_SHOT_SOUND
+	polaroid_shot_player.autoplay = false
+	polaroid_shot_player.volume_db = -5.0
+	add_child(polaroid_shot_player)
 
 func _build_intro_overlay() -> void:
 	intro_overlay = Control.new()
@@ -522,8 +614,15 @@ func _build_intro_overlay() -> void:
 	intro_instruction_card.modulate.a = 0.0
 	intro_overlay.add_child(intro_instruction_card)
 
+	intro_instruction_box = VBoxContainer.new()
+	intro_instruction_box.custom_minimum_size = Vector2(1200, 360)
+	intro_instruction_box.alignment = BoxContainer.ALIGNMENT_CENTER
+	intro_instruction_box.add_theme_constant_override("separation", 26)
+	intro_instruction_card.add_child(intro_instruction_box)
+
 	intro_instruction_label = Label.new()
 	intro_instruction_label.custom_minimum_size = Vector2(1200, 260)
+	intro_instruction_label.size_flags_horizontal = Control.SIZE_SHRINK_CENTER
 	intro_instruction_label.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
 	intro_instruction_label.vertical_alignment = VERTICAL_ALIGNMENT_CENTER
 	intro_instruction_label.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
@@ -531,7 +630,18 @@ func _build_intro_overlay() -> void:
 	intro_instruction_label.add_theme_font_size_override("font_size", 42)
 	intro_instruction_label.add_theme_color_override("font_color", Color.WHITE)
 	intro_instruction_label.text = "Stop all the raccoons from cheating at your casino\nby taking a picture of them on the polaroid."
-	intro_instruction_card.add_child(intro_instruction_label)
+	intro_instruction_box.add_child(intro_instruction_label)
+
+	intro_instruction_prompt = Label.new()
+	intro_instruction_prompt.custom_minimum_size = Vector2(1200, 44)
+	intro_instruction_prompt.size_flags_horizontal = Control.SIZE_SHRINK_CENTER
+	intro_instruction_prompt.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+	intro_instruction_prompt.vertical_alignment = VERTICAL_ALIGNMENT_CENTER
+	intro_instruction_prompt.add_theme_font_override("font", MANROPE_FONT)
+	intro_instruction_prompt.add_theme_font_size_override("font_size", 26)
+	intro_instruction_prompt.add_theme_color_override("font_color", Color(0.92, 0.92, 0.92))
+	intro_instruction_prompt.text = "[press any button to continue]"
+	intro_instruction_box.add_child(intro_instruction_prompt)
 
 func _build_camera_indicator() -> void:
 	# Small top-right HUD readout of the webcam gesture detector (web only).
@@ -664,6 +774,7 @@ func _open_detail(i: int) -> void:
 	monitor_screen.visible = false
 	if camera_open_player != null:
 		camera_open_player.play()
+	_start_camera_hum()
 	_update_map_highlight()
 	_play_camera_flip_open(switching)
 	# Turn on webcam gesture detection while this camera screen is open. The call
@@ -676,6 +787,7 @@ func _open_detail(i: int) -> void:
 func _close_detail(animate := true) -> void:
 	mouse_default_cursor_shape = CURSOR_ARROW
 	current_detail = -1
+	_stop_camera_hum()
 	if camera_close_player != null:
 		camera_close_player.play()
 	# Stop detecting once the player is back on the monitor wall.
@@ -701,7 +813,7 @@ func _take_photo() -> void:
 	if not GameManager.use_photo():      # out of film -> can't take a photo
 		detail_label.text = "Out of film! No photos left tonight."
 		return
-	_play_flash()
+	_play_polaroid_overlay()
 	var ferret := rooms[_screen_to_room(current_detail)].get_active_ferret()
 	if ferret:
 		ferret.mark_caught()
@@ -717,7 +829,6 @@ func _on_money_changed(amount: float) -> void:
 	var value := maxi(int(round(amount)), 0)
 	var digits := "%06d" % value
 	var money_chars := [
-		MONEY_SYMBOL_TEXTURE,
 		MONEY_DIGIT_TEXTURES[digits.substr(0, 1)],
 		MONEY_DIGIT_TEXTURES[digits.substr(1, 1)],
 		MONEY_DIGIT_TEXTURES[digits.substr(2, 1)],
@@ -775,11 +886,26 @@ func _flash_camera_indicator() -> void:
 	t.tween_property(camera_label, "modulate", Color(1, 1, 1), 0.4)
 
 func _on_game_over(won: bool) -> void:
+	last_game_won = won
 	overlay_label.text = "You Survived!" if won else "Game Over"
 	overlay_label.add_theme_color_override(
 		"font_color", Color(0.6, 1, 0.6) if won else Color(1, 0.45, 0.45))
+	overlay.modulate.a = 0.0
 	overlay.visible = true
 	_stop_day_music()
+	if won:
+		if win_player != null:
+			win_player.play()
+	elif game_over_player != null:
+		game_over_player.play()
+	var tween := create_tween()
+	tween.tween_property(overlay, "modulate:a", 1.0, 0.7)
+
+func _on_restart_pressed() -> void:
+	if last_game_won:
+		get_tree().change_scene_to_file("res://scenes/StartScreen.tscn")
+		return
+	get_tree().reload_current_scene()
 
 # --- helpers ----------------------------------------------------------------
 
@@ -788,6 +914,59 @@ func _make_label(text: String) -> Label:
 	l.text = text
 	l.add_theme_font_size_override("font_size", 24)
 	return l
+
+func _play_polaroid_overlay() -> void:
+	if polaroid_overlay == null:
+		if polaroid_shot_player != null:
+			polaroid_shot_player.play()
+		_play_flash()
+		return
+
+	var overlay_size := polaroid_overlay.custom_minimum_size
+	var screen_size := get_viewport_rect().size
+	var shown_pos := Vector2(
+		(screen_size.x - overlay_size.x) * 0.5,
+		screen_size.y - overlay_size.y + 120.0
+	)
+	var down_twitch_pos := shown_pos + Vector2(0.0, 50.0)
+	var up_twitch_pos := shown_pos - Vector2(0.0, 50.0)
+	var hidden_pos := Vector2(shown_pos.x, screen_size.y + 30.0)
+
+	polaroid_overlay.position = hidden_pos
+	polaroid_overlay.visible = true
+
+	var tween := create_tween()
+	tween.tween_property(polaroid_overlay, "position", shown_pos, 0.27) \
+		.set_trans(Tween.TRANS_CUBIC).set_ease(Tween.EASE_OUT)
+	tween.tween_callback(func():
+		if polaroid_shot_player != null:
+			polaroid_shot_player.play()
+		_play_flash()
+	)
+	tween.tween_property(polaroid_overlay, "position", down_twitch_pos, 0.08) \
+		.set_trans(Tween.TRANS_SINE).set_ease(Tween.EASE_IN_OUT)
+	tween.tween_property(polaroid_overlay, "position", up_twitch_pos, 0.09) \
+		.set_trans(Tween.TRANS_SINE).set_ease(Tween.EASE_IN_OUT)
+	tween.tween_property(polaroid_overlay, "position", hidden_pos, 0.24) \
+		.set_trans(Tween.TRANS_CUBIC).set_ease(Tween.EASE_IN)
+	tween.tween_callback(func(): polaroid_overlay.visible = false)
+
+func _make_money_tint_material() -> ShaderMaterial:
+	var shader := Shader.new()
+	shader.code = """
+shader_type canvas_item;
+
+uniform vec4 tint_color : source_color = vec4(1.0, 0.8, 0.4, 1.0);
+
+void fragment() {
+	vec4 tex = texture(TEXTURE, UV);
+	COLOR = vec4(tint_color.rgb, tex.a * tint_color.a);
+}
+"""
+	var material := ShaderMaterial.new()
+	material.shader = shader
+	material.set_shader_parameter("tint_color", MONEY_DISPLAY_TINT)
+	return material
 
 func _play_flash() -> void:
 	flash.color.a = 0.9
@@ -927,8 +1106,38 @@ func _show_banner(text: String) -> void:
 	t.tween_property(banner, "modulate:a", 0.0, 0.6)
 	t.tween_callback(func(): banner.visible = false)
 
+func _start_camera_hum() -> void:
+	if camera_hum_player == null or camera_hum_player.playing:
+		return
+	camera_hum_player.play()
+
+func _stop_camera_hum() -> void:
+	if camera_hum_player == null or not camera_hum_player.playing:
+		return
+	camera_hum_player.stop()
+
+func _is_intro_advance_input(event: InputEvent) -> bool:
+	if event is InputEventKey:
+		return event.pressed and not event.echo
+	if event is InputEventMouseButton:
+		return event.pressed
+	if event is InputEventJoypadButton:
+		return event.pressed
+	return false
+
+func _wait_for_intro_continue(timeout: float) -> void:
+	intro_advance_requested = false
+	var elapsed := 0.0
+	while elapsed < timeout and not intro_advance_requested:
+		await get_tree().process_frame
+		elapsed += get_process_delta_time()
+	intro_advance_requested = false
+
 func _play_night_intro(night: int) -> void:
 	intro_sequence_running = true
+	intro_advance_requested = false
+	monitor_screen.visible = false
+	monitor_screen.modulate.a = 0.0
 	intro_overlay.visible = true
 	intro_day_card.visible = true
 	intro_day_card.modulate.a = 0.0
@@ -940,7 +1149,7 @@ func _play_night_intro(night: int) -> void:
 
 	intro_overlay.modulate.a = 1.0
 	var fade_in_day := create_tween()
-	fade_in_day.tween_property(intro_day_card, "modulate:a", 1.0, 1.0)
+	fade_in_day.tween_property(intro_day_card, "modulate:a", 1.0, 1.35)
 	await fade_in_day.finished
 	await get_tree().create_timer(2.8).timeout
 
@@ -951,22 +1160,34 @@ func _play_night_intro(night: int) -> void:
 		fade_day.tween_property(intro_day_card, "modulate:a", 0.0, 1.5)
 		await fade_day.finished
 		intro_day_card.visible = false
-		await get_tree().create_timer(0.35).timeout
+		await get_tree().create_timer(0.2).timeout
+		intro_instruction_label.text = "Stop all the raccoons from cheating at your casino\nby taking a picture of them on the polaroid."
 		var fade_in_instructions := create_tween()
 		fade_in_instructions.tween_property(intro_instruction_card, "modulate:a", 1.0, 1.5)
 		await fade_in_instructions.finished
-		await get_tree().create_timer(4.8).timeout
+		await _wait_for_intro_continue(4.8)
+		var fade_out_instruction_one := create_tween()
+		fade_out_instruction_one.tween_property(intro_instruction_card, "modulate:a", 0.0, 0.45)
+		await fade_out_instruction_one.finished
+		intro_instruction_label.text = "If you run out of money, you lose.\nIf you survive five days, you win."
+		var fade_in_instruction_two := create_tween()
+		fade_in_instruction_two.tween_property(intro_instruction_card, "modulate:a", 1.0, 0.45)
+		await fade_in_instruction_two.finished
+		await _wait_for_intro_continue(4.8)
 	else:
 		await get_tree().create_timer(0.9).timeout
 
 	_fade_in_day_music()
-	var fade_out := create_tween()
+	monitor_screen.visible = true
+	var fade_out := create_tween().set_parallel(true)
 	fade_out.tween_property(intro_overlay, "modulate:a", 0.0, 1.6)
+	fade_out.tween_property(monitor_screen, "modulate:a", 1.0, 1.6)
 	await fade_out.finished
 	intro_overlay.visible = false
 	intro_instruction_card.visible = false
 	intro_day_card.visible = true
 	intro_day_card.modulate.a = 1.0
+	monitor_screen.modulate.a = 1.0
 	intro_sequence_running = false
 
 func _get_screen_at_point(point: Vector2) -> int:

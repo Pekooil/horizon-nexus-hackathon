@@ -3,6 +3,7 @@
 [ext_resource type="Script" path="res://scripts/casino_player.gd" id="1_player"]
 [ext_resource type="Texture2D" path="res://assets/ferret-head.png" id="2_head"]
 [ext_resource type="Texture2D" path="res://icon.svg" id="3_icon"]
+[ext_resource type="Texture2D" path="res://assets/raccoon-caught.png" id="4_caught"]
 
 [node name="CasinoPlayer" type="Node2D"]
 script = ExtResource("1_player")
@@ -22,6 +23,5 @@ self_modulate = Color(1, 0.85, 0.2, 1)
 [node name="Caught" type="Sprite2D" parent="."]
 visible = false
 position = Vector2(0, -16)
-texture = ExtResource("3_icon")
-scale = Vector2(0.34, 0.34)
-self_modulate = Color(1, 0.25, 0.25, 0.7)
+texture = ExtResource("4_caught")
+scale = Vector2(0.12299465, 0.11564626)
