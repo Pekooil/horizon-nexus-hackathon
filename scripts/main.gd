@@ -15,6 +15,7 @@ const ROOM_SCENES: Array[PackedScene] = [
 ]
 const ROOM_NAMES := ["Entrance", "Bar", "Lounge", "Poker", "Roulette", "Slot Machines"]
 const SCREEN_TO_ROOM := [0, 4, 3, 2, 1, 5]
+const SCREEN_GRID_COLUMNS := 3
 # Map of the casino floor, indexed the same as ROOM_NAMES/ROOM_SCENES:
 # Entrance -> Bar -> {Lounge, Poker, Roulette}, with Poker/Roulette also
 # linked to each other via the Slot Machines room.
@@ -117,6 +118,7 @@ var last_game_won := false
 var map_panel: Control
 var map_buttons := {}   # room_idx -> Button on the floor map
 var current_detail := -1
+var selected_screen := 0
 var spawn_timer := 4.0
 var music_player: AudioStreamPlayer
 var camera_open_player: AudioStreamPlayer
@@ -171,15 +173,20 @@ func _unhandled_input(event: InputEvent) -> void:
 		if _is_intro_advance_input(event):
 			intro_advance_requested = true
 		return
-	if detail_view != null and detail_view.visible:
+
+	if _handle_camera_keyboard_input(event):
+		get_viewport().set_input_as_handled()
 		return
 
 	if event is InputEventMouseMotion:
 		var hovered_screen := _get_screen_at_point(event.position)
+		if hovered_screen >= 0:
+			selected_screen = hovered_screen
 		mouse_default_cursor_shape = CURSOR_POINTING_HAND if hovered_screen >= 0 else CURSOR_ARROW
 	elif event is InputEventMouseButton and event.pressed and event.button_index == MOUSE_BUTTON_LEFT:
 		var clicked_screen := _get_screen_at_point(event.position)
 		if clicked_screen >= 0:
+			selected_screen = clicked_screen
 			_open_detail(clicked_screen)
 			get_viewport().set_input_as_handled()
 
@@ -337,12 +344,11 @@ func _build_detail_view() -> void:
 func _build_map() -> void:
 	# Floor map pinned to the bottom-right of the detail view. Each room is a
 	# clickable cell that jumps the view to that camera (calls _open_detail), so
-	# the player can hop between rooms without going back to the wall. Layout:
-	#     [blank]   Entrance   [blank]
-	#     Lounge    Bar        Poker
-	#     [blank]   Roulette   Slot Machines
-	# -1 marks a blank cell; numbers index ROOM_NAMES/ROOM_SCENES.
-	var grid_order := [-1, 0, -1, 2, 1, 3, -1, 4, 5]
+	# the player can hop between rooms without going back to the wall.
+	# This mirrors the real 2x3 camera wall layout exactly:
+	#     Entrance   Roulette   Poker
+	#     Lounge     Bar        Slot Machines
+	var grid_order := SCREEN_TO_ROOM
 	var cell_size := Vector2(96, 50)
 
 	map_panel = PanelContainer.new()
@@ -767,6 +773,7 @@ func _spawn_ferret() -> void:
 
 func _open_detail(i: int) -> void:
 	var switching := detail_view.visible   # hopping rooms via the map vs. a fresh open
+	selected_screen = i
 	current_detail = i
 	detail_texture.texture = feeds[i].get_texture()
 	detail_label.text = "%s  —  look closely for a cheater" % ROOM_NAMES[_screen_to_room(i)]
@@ -1124,6 +1131,73 @@ func _is_intro_advance_input(event: InputEvent) -> bool:
 	if event is InputEventJoypadButton:
 		return event.pressed
 	return false
+
+func _handle_camera_keyboard_input(event: InputEvent) -> bool:
+	if not (event is InputEventKey):
+		return false
+	if not event.pressed or event.echo:
+		return false
+	if detail_transitioning:
+		return false
+
+	if detail_view != null and detail_view.visible:
+		if event.keycode == KEY_SPACE:
+			_close_detail()
+			return true
+		if event.keycode == KEY_ENTER or event.keycode == KEY_KP_ENTER:
+			_take_photo()
+			return true
+		if _is_left_input(event):
+			_navigate_screen_selection(-1, 0, true)
+			return true
+		if _is_right_input(event):
+			_navigate_screen_selection(1, 0, true)
+			return true
+		if _is_up_input(event):
+			_navigate_screen_selection(0, -1, true)
+			return true
+		if _is_down_input(event):
+			_navigate_screen_selection(0, 1, true)
+			return true
+		return false
+
+	if event.keycode == KEY_SPACE:
+		_open_detail(selected_screen)
+		return true
+	if _is_left_input(event):
+		_navigate_screen_selection(-1, 0, false)
+		return true
+	if _is_right_input(event):
+		_navigate_screen_selection(1, 0, false)
+		return true
+	if _is_up_input(event):
+		_navigate_screen_selection(0, -1, false)
+		return true
+	if _is_down_input(event):
+		_navigate_screen_selection(0, 1, false)
+		return true
+	return false
+
+func _navigate_screen_selection(dx: int, dy: int, open_after_move: bool) -> void:
+	var row := int(selected_screen / SCREEN_GRID_COLUMNS)
+	var col := selected_screen % SCREEN_GRID_COLUMNS
+	row = clampi(row + dy, 0, 1)
+	col = clampi(col + dx, 0, SCREEN_GRID_COLUMNS - 1)
+	selected_screen = row * SCREEN_GRID_COLUMNS + col
+	if open_after_move:
+		_open_detail(selected_screen)
+
+func _is_left_input(event: InputEventKey) -> bool:
+	return event.keycode == KEY_LEFT or event.keycode == KEY_A
+
+func _is_right_input(event: InputEventKey) -> bool:
+	return event.keycode == KEY_RIGHT or event.keycode == KEY_D
+
+func _is_up_input(event: InputEventKey) -> bool:
+	return event.keycode == KEY_UP or event.keycode == KEY_W
+
+func _is_down_input(event: InputEventKey) -> bool:
+	return event.keycode == KEY_DOWN or event.keycode == KEY_S
 
 func _wait_for_intro_continue(timeout: float) -> void:
 	intro_advance_requested = false
