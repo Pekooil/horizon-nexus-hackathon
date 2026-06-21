@@ -14,8 +14,10 @@
 [ext_resource type="Texture2D" uid="uid://cy53gk7l7g68j" path="res://assets/clock-hours.png" id="12_clock_hours"]
 [ext_resource type="Texture2D" uid="uid://cjtvjny6qsxyb" path="res://assets/clock-minutes.png" id="13_clock_minutes"]
 [ext_resource type="Texture2D" uid="uid://b6mgo627jtbgg" path="res://assets/clock-dot.png" id="14_clock_dot"]
+[ext_resource type="Texture2D" uid="uid://dth1nhg1qviy" path="res://assets/polaroid.png" id="15_polaroid"]
+[ext_resource type="Texture2D" uid="uid://c3ub8uby1lsjh" path="res://assets/film.png" id="16_film"]
 
-[sub_resource type="ArrayMesh" id="ArrayMesh_mwfav"]
+[sub_resource type="ArrayMesh" id="ArrayMesh_cvmbd"]
 _surfaces = [{
 "aabb": AABB(439.70584, 304.41174, 0, 295.58817, 199.26468, 1e-05),
 "attribute_data": PackedByteArray(0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 128, 63, 0, 0, 0, 0, 0, 0, 128, 63, 0, 0, 128, 63, 0, 0, 0, 0, 0, 0, 128, 63),
@@ -28,7 +30,7 @@ _surfaces = [{
 "vertex_data": PackedByteArray(194, 67, 224, 67, 29, 158, 181, 67, 0, 0, 0, 0, 209, 210, 55, 68, 180, 52, 152, 67, 0, 0, 0, 0, 74, 43, 54, 68, 14, 15, 222, 67, 0, 0, 0, 0, 89, 218, 219, 67, 149, 214, 251, 67, 0, 0, 0, 0)
 }]
 
-[sub_resource type="ArrayMesh" id="ArrayMesh_3p2gp"]
+[sub_resource type="ArrayMesh" id="ArrayMesh_ft6cd"]
 _surfaces = [{
 "aabb": AABB(760.294, 287.49997, 0, 342.64703, 150, 1e-05),
 "attribute_data": PackedByteArray(0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 128, 63, 0, 0, 0, 0, 0, 0, 128, 63, 0, 0, 128, 63, 0, 0, 0, 0, 0, 0, 128, 63),
@@ -41,7 +43,7 @@ _surfaces = [{
 "vertex_data": PackedByteArray(209, 18, 62, 68, 210, 82, 146, 67, 0, 0, 0, 0, 29, 222, 137, 68, 255, 191, 143, 67, 0, 0, 0, 0, 135, 119, 134, 68, 194, 3, 218, 67, 0, 0, 0, 0, 29, 30, 66, 68, 255, 191, 218, 67, 0, 0, 0, 0)
 }]
 
-[sub_resource type="ArrayMesh" id="ArrayMesh_cvmbd"]
+[sub_resource type="ArrayMesh" id="ArrayMesh_bb450"]
 _surfaces = [{
 "aabb": AABB(1122.7941, 299.99997, 0, 291.1764, 215.4412, 1e-05),
 "attribute_data": PackedByteArray(0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 128, 63, 0, 0, 0, 0, 0, 0, 128, 63, 0, 0, 128, 63, 0, 0, 0, 0, 0, 0, 128, 63),
@@ -54,7 +56,7 @@ _surfaces = [{
 "vertex_data": PackedByteArray(105, 89, 140, 68, 255, 255, 149, 67, 0, 0, 0, 0, 240, 96, 176, 68, 225, 161, 174, 67, 0, 0, 0, 0, 14, 191, 176, 68, 60, 220, 0, 68, 0, 0, 0, 0, 14, 207, 140, 68, 240, 240, 227, 67, 0, 0, 0, 0)
 }]
 
-[sub_resource type="ArrayMesh" id="ArrayMesh_ft6cd"]
+[sub_resource type="ArrayMesh" id="ArrayMesh_nfivy"]
 _surfaces = [{
 "aabb": AABB(453.67642, 477.20584, 0, 296.32352, 216.91177, 1e-05),
 "attribute_data": PackedByteArray(0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 128, 63, 0, 0, 0, 0, 0, 0, 128, 63, 0, 0, 128, 63, 0, 0, 0, 0, 0, 0, 128, 63),
@@ -67,7 +69,7 @@ _surfaces = [{
 "vertex_data": PackedByteArray(149, 214, 226, 67, 195, 163, 5, 68, 0, 0, 0, 0, 209, 242, 58, 68, 89, 154, 238, 67, 0, 0, 0, 0, 255, 127, 59, 68, 240, 48, 31, 68, 0, 0, 0, 0, 74, 11, 229, 67, 135, 135, 45, 68, 0, 0, 0, 0)
 }]
 
-[sub_resource type="ArrayMesh" id="ArrayMesh_bb450"]
+[sub_resource type="ArrayMesh" id="ArrayMesh_1nqs0"]
 _surfaces = [{
 "aabb": AABB(782.35284, 472.79407, 0, 296.32355, 158.82355, 1e-05),
 "attribute_data": PackedByteArray(0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 128, 63, 0, 0, 0, 0, 0, 0, 128, 63, 0, 0, 128, 63, 0, 0, 0, 0, 0, 0, 128, 63),
@@ -80,7 +82,7 @@ _surfaces = [{
 "vertex_data": PackedByteArray(149, 150, 67, 68, 224, 33, 237, 67, 0, 0, 0, 0, 165, 213, 134, 68, 164, 101, 236, 67, 0, 0, 0, 0, 135, 119, 134, 68, 135, 231, 29, 68, 0, 0, 0, 0, 179, 244, 67, 68, 120, 184, 29, 68, 0, 0, 0, 0)
 }]
 
-[sub_resource type="ArrayMesh" id="ArrayMesh_nfivy"]
+[sub_resource type="ArrayMesh" id="ArrayMesh_1iba3"]
 _surfaces = [{
 "aabb": AABB(1105.8822, 471.3235, 0, 301.47058, 227.94116, 1e-05),
 "attribute_data": PackedByteArray(0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 128, 63, 0, 0, 0, 0, 0, 0, 128, 63, 0, 0, 128, 63, 0, 0, 0, 0, 0, 0, 128, 63),
@@ -267,8 +269,78 @@ layout_mode = 2
 text = "12:00 AM"
 
 [node name="Photos" type="Label" parent="MonitorScreen/TopBar" unique_id=121416442]
+visible = false
 layout_mode = 2
 text = "Photos: 5"
+
+[node name="DeskPolaroid" type="TextureRect" parent="MonitorScreen" unique_id=167335221]
+layout_mode = 0
+offset_left = 1126.0
+offset_top = 748.0
+offset_right = 1246.0
+offset_bottom = 853.0
+mouse_filter = 2
+texture = ExtResource("15_polaroid")
+expand_mode = 1
+stretch_mode = 5
+
+[node name="FilmRow" type="Control" parent="MonitorScreen" unique_id=169346882]
+anchors_preset = 0
+offset_left = 1236.0
+offset_top = 805.0
+offset_right = 1416.0
+offset_bottom = 845.0
+scale = Vector2(1.5, 1.5)
+mouse_filter = 2
+
+[node name="Film0" type="TextureRect" parent="MonitorScreen/FilmRow" unique_id=124782420]
+custom_minimum_size = Vector2(22, 36)
+layout_mode = 0
+offset_right = 22.0
+offset_bottom = 36.0
+texture = ExtResource("16_film")
+expand_mode = 1
+stretch_mode = 5
+
+[node name="Film1" type="TextureRect" parent="MonitorScreen/FilmRow" unique_id=1966094809]
+custom_minimum_size = Vector2(22, 36)
+layout_mode = 0
+offset_left = 18.0
+offset_right = 40.0
+offset_bottom = 36.0
+texture = ExtResource("16_film")
+expand_mode = 1
+stretch_mode = 5
+
+[node name="Film2" type="TextureRect" parent="MonitorScreen/FilmRow" unique_id=212881767]
+custom_minimum_size = Vector2(22, 36)
+layout_mode = 0
+offset_left = 36.0
+offset_right = 58.0
+offset_bottom = 36.0
+texture = ExtResource("16_film")
+expand_mode = 1
+stretch_mode = 5
+
+[node name="Film3" type="TextureRect" parent="MonitorScreen/FilmRow" unique_id=171219292]
+custom_minimum_size = Vector2(22, 36)
+layout_mode = 0
+offset_left = 54.0
+offset_right = 76.0
+offset_bottom = 36.0
+texture = ExtResource("16_film")
+expand_mode = 1
+stretch_mode = 5
+
+[node name="Film4" type="TextureRect" parent="MonitorScreen/FilmRow" unique_id=845683771]
+custom_minimum_size = Vector2(22, 36)
+layout_mode = 0
+offset_left = 72.0
+offset_right = 94.0
+offset_bottom = 36.0
+texture = ExtResource("16_film")
+expand_mode = 1
+stretch_mode = 5
 
 [node name="WallCenter" type="Control" parent="MonitorScreen" unique_id=1135378175]
 layout_mode = 1
@@ -292,7 +364,7 @@ color = Color(0.2, 0.9, 1, 0.18)
 polygon = PackedVector2Array(448.52936, 363.23526, 735.294, 304.41174, 728.6764, 444.1176, 439.70584, 503.67642)
 
 [node name="Surface" type="MeshInstance2D" parent="MonitorScreen/WallCenter/ScreenLayout/Screen0" unique_id=1423540439]
-mesh = SubResource("ArrayMesh_mwfav")
+mesh = SubResource("ArrayMesh_cvmbd")
 
 [node name="Hitbox" type="Area2D" parent="MonitorScreen/WallCenter/ScreenLayout/Screen0" unique_id=1223570285]
 
@@ -307,7 +379,7 @@ color = Color(0.2, 0.9, 1, 0.18)
 polygon = PackedVector2Array(760.294, 292.64703, 1102.941, 287.49997, 1075.7352, 436.02936, 776.4705, 437.49997)
 
 [node name="Surface" type="MeshInstance2D" parent="MonitorScreen/WallCenter/ScreenLayout/Screen1" unique_id=1067620408]
-mesh = SubResource("ArrayMesh_3p2gp")
+mesh = SubResource("ArrayMesh_ft6cd")
 
 [node name="Hitbox" type="Area2D" parent="MonitorScreen/WallCenter/ScreenLayout/Screen1" unique_id=794872546]
 
@@ -322,7 +394,7 @@ color = Color(0.2, 0.9, 1, 0.18)
 polygon = PackedVector2Array(1122.7941, 299.99997, 1411.0293, 349.26468, 1413.9705, 515.44116, 1126.4705, 455.88232)
 
 [node name="Surface" type="MeshInstance2D" parent="MonitorScreen/WallCenter/ScreenLayout/Screen2" unique_id=1261085965]
-mesh = SubResource("ArrayMesh_cvmbd")
+mesh = SubResource("ArrayMesh_bb450")
 
 [node name="Hitbox" type="Area2D" parent="MonitorScreen/WallCenter/ScreenLayout/Screen2" unique_id=1023373754]
 
@@ -337,7 +409,7 @@ color = Color(0.2, 0.9, 1, 0.18)
 polygon = PackedVector2Array(453.67642, 534.5588, 747.794, 477.20584, 749.99994, 636.76465, 458.0882, 694.1176)
 
 [node name="Surface" type="MeshInstance2D" parent="MonitorScreen/WallCenter/ScreenLayout/Screen3" unique_id=860430615]
-mesh = SubResource("ArrayMesh_ft6cd")
+mesh = SubResource("ArrayMesh_nfivy")
 
 [node name="Hitbox" type="Area2D" parent="MonitorScreen/WallCenter/ScreenLayout/Screen3" unique_id=526051854]
 
@@ -352,7 +424,7 @@ color = Color(0.2, 0.9, 1, 0.18)
 polygon = PackedVector2Array(782.35284, 474.26465, 1078.6764, 472.79407, 1075.7352, 631.6176, 783.8234, 630.8823)
 
 [node name="Surface" type="MeshInstance2D" parent="MonitorScreen/WallCenter/ScreenLayout/Screen4" unique_id=1586514954]
-mesh = SubResource("ArrayMesh_bb450")
+mesh = SubResource("ArrayMesh_1nqs0")
 
 [node name="Hitbox" type="Area2D" parent="MonitorScreen/WallCenter/ScreenLayout/Screen4" unique_id=36284508]
 
@@ -367,7 +439,7 @@ color = Color(0.2, 0.9, 1, 0.18)
 polygon = PackedVector2Array(1106.6176, 471.3235, 1405.8822, 530.14703, 1407.3528, 699.26465, 1105.8822, 638.9706)
 
 [node name="Surface" type="MeshInstance2D" parent="MonitorScreen/WallCenter/ScreenLayout/Screen5" unique_id=933660816]
-mesh = SubResource("ArrayMesh_nfivy")
+mesh = SubResource("ArrayMesh_1iba3")
 
 [node name="Hitbox" type="Area2D" parent="MonitorScreen/WallCenter/ScreenLayout/Screen5" unique_id=2049274840]
 

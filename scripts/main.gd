@@ -28,6 +28,10 @@ const ROOM_GRAPH := {
 }
 const ENTRANCE_ROOM := 0
 const MonitorQuad = preload("res://scripts/monitor_quad.gd")
+const CHUNKY_FONT = preload("res://assets/ChunkyRetro-6YmnD.otf")
+const MANROPE_FONT = preload("res://assets/fonts/Manrope-Regular.ttf")
+const POLAROID_TEXTURE = preload("res://assets/polaroid.png")
+const FILM_TEXTURE = preload("res://assets/film.png")
 const MONEY_SYMBOL_TEXTURE := preload("res://assets/money_digits/money.png")
 const MONEY_DOT_TEXTURE := preload("res://assets/money_digits/dot.png")
 const MONEY_DIGIT_TEXTURES := {
@@ -50,6 +54,7 @@ const MONEY_DIGIT_TEXTURES := {
 @onready var night_label: Label = $MonitorScreen/TopBar/Night
 @onready var clock_label: Label = $MonitorScreen/TopBar/Clock
 @onready var photos_label: Label = $MonitorScreen/TopBar/Photos
+@onready var film_row: Control = $MonitorScreen/FilmRow
 @onready var clock_hour_hand: Sprite2D = $MonitorScreen/ClockArt/HourHand
 @onready var clock_minute_hand: Sprite2D = $MonitorScreen/ClockArt/MinuteHand
 
@@ -68,6 +73,16 @@ var overlay: Control
 var overlay_label: Label
 
 var money_sprites: Array[TextureRect] = []
+var film_sprites: Array[TextureRect] = []
+var film_base_positions: Array[Vector2] = []
+var intro_overlay: Control
+var intro_day_card: VBoxContainer
+var intro_day_label: Label
+var intro_instruction_card: CenterContainer
+var intro_instruction_label: Label
+var intro_day_films: Array[TextureRect] = []
+var intro_sequence_running := false
+var has_shown_first_time_instructions := false
 var map_panel: Control
 var map_buttons := {}   # room_idx -> Button on the floor map
 var current_detail := -1
@@ -79,15 +94,20 @@ var gesture_input: Node
 var camera_label: Label
 
 func _ready() -> void:
+	monitor_screen.visible = false
 	_build_feeds()
 	_bind_monitors()
 	_build_money_display()
+	_build_film_display()
 	_style_hud()
 	_build_detail_view()
 	_build_map()
 	_build_banner()
 	_build_overlay()
 	_build_flash()
+	_build_intro_overlay()
+	intro_overlay.visible = true
+	intro_overlay.modulate.a = 1.0
 	_build_camera_indicator()
 	_setup_gesture_input()
 
@@ -102,6 +122,8 @@ func _ready() -> void:
 	_update_clock_visual()
 
 func _unhandled_input(event: InputEvent) -> void:
+	if intro_sequence_running:
+		return
 	if detail_view != null and detail_view.visible:
 		return
 
@@ -115,7 +137,7 @@ func _unhandled_input(event: InputEvent) -> void:
 			get_viewport().set_input_as_handled()
 
 func _process(delta: float) -> void:
-	if not GameManager.running:
+	if intro_sequence_running or not GameManager.running:
 		return
 	spawn_timer -= delta
 	if spawn_timer <= 0.0:
@@ -158,7 +180,7 @@ func _bind_monitors() -> void:
 		screen.set_feed_texture(feeds[i].get_texture())
 
 func _style_hud() -> void:
-	for l in [night_label, clock_label, photos_label]:
+	for l in [night_label, clock_label]:
 		l.add_theme_font_size_override("font_size", 24)
 
 func _build_money_display() -> void:
@@ -167,6 +189,25 @@ func _build_money_display() -> void:
 	for child in money_display.get_children():
 		if child is TextureRect:
 			money_sprites.append(child)
+
+func _build_film_display() -> void:
+	film_sprites.clear()
+	film_base_positions.clear()
+	for child in film_row.get_children():
+		if child is TextureRect:
+			film_sprites.append(child)
+			film_base_positions.append(child.position)
+	_randomize_film_props()
+
+func _randomize_film_props() -> void:
+	for i in film_sprites.size():
+		var film := film_sprites[i]
+		var base_position := film_base_positions[i]
+		film.position = base_position + Vector2(
+			randf_range(-1.0, 1.0),
+			randf_range(-1.0, 1.0),
+		)
+		film.rotation_degrees = randf_range(-20.0, 20.0)
 
 func _build_detail_view() -> void:
 	detail_view = Control.new()
@@ -328,6 +369,78 @@ func _build_flash() -> void:
 	flash.set_anchors_preset(Control.PRESET_FULL_RECT)
 	flash.mouse_filter = Control.MOUSE_FILTER_IGNORE
 	add_child(flash)
+
+func _build_intro_overlay() -> void:
+	intro_overlay = Control.new()
+	intro_overlay.set_anchors_preset(Control.PRESET_FULL_RECT)
+	intro_overlay.mouse_filter = Control.MOUSE_FILTER_STOP
+	intro_overlay.visible = false
+	intro_overlay.modulate.a = 0.0
+	add_child(intro_overlay)
+
+	var dim := ColorRect.new()
+	dim.color = Color.BLACK
+	dim.set_anchors_preset(Control.PRESET_FULL_RECT)
+	intro_overlay.add_child(dim)
+
+	var day_center := CenterContainer.new()
+	day_center.set_anchors_preset(Control.PRESET_FULL_RECT)
+	intro_overlay.add_child(day_center)
+
+	intro_day_card = VBoxContainer.new()
+	intro_day_card.alignment = BoxContainer.ALIGNMENT_CENTER
+	intro_day_card.add_theme_constant_override("separation", 44)
+	day_center.add_child(intro_day_card)
+
+	intro_day_label = Label.new()
+	intro_day_label.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+	intro_day_label.add_theme_font_override("font", CHUNKY_FONT)
+	intro_day_label.add_theme_font_size_override("font_size", 130)
+	intro_day_label.add_theme_color_override("font_color", Color.WHITE)
+	intro_day_card.add_child(intro_day_label)
+
+	var day_row := HBoxContainer.new()
+	day_row.alignment = BoxContainer.ALIGNMENT_CENTER
+	day_row.add_theme_constant_override("separation", 36)
+	intro_day_card.add_child(day_row)
+
+	var intro_polaroid := TextureRect.new()
+	intro_polaroid.custom_minimum_size = Vector2(120, 120)
+	intro_polaroid.texture = POLAROID_TEXTURE
+	intro_polaroid.expand_mode = TextureRect.EXPAND_IGNORE_SIZE
+	intro_polaroid.stretch_mode = TextureRect.STRETCH_KEEP_ASPECT_CENTERED
+	day_row.add_child(intro_polaroid)
+
+	var intro_film_row := HBoxContainer.new()
+	intro_film_row.alignment = BoxContainer.ALIGNMENT_CENTER
+	intro_film_row.add_theme_constant_override("separation", 6)
+	day_row.add_child(intro_film_row)
+
+	for i in GameManager.PHOTOS_PER_NIGHT:
+		var intro_film := TextureRect.new()
+		intro_film.custom_minimum_size = Vector2(40, 64)
+		intro_film.texture = FILM_TEXTURE
+		intro_film.expand_mode = TextureRect.EXPAND_IGNORE_SIZE
+		intro_film.stretch_mode = TextureRect.STRETCH_KEEP_ASPECT_CENTERED
+		intro_film_row.add_child(intro_film)
+		intro_day_films.append(intro_film)
+
+	intro_instruction_card = CenterContainer.new()
+	intro_instruction_card.set_anchors_preset(Control.PRESET_FULL_RECT)
+	intro_instruction_card.visible = false
+	intro_instruction_card.modulate.a = 0.0
+	intro_overlay.add_child(intro_instruction_card)
+
+	intro_instruction_label = Label.new()
+	intro_instruction_label.custom_minimum_size = Vector2(1200, 260)
+	intro_instruction_label.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+	intro_instruction_label.vertical_alignment = VERTICAL_ALIGNMENT_CENTER
+	intro_instruction_label.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
+	intro_instruction_label.add_theme_font_override("font", MANROPE_FONT)
+	intro_instruction_label.add_theme_font_size_override("font_size", 42)
+	intro_instruction_label.add_theme_color_override("font_color", Color.WHITE)
+	intro_instruction_label.text = "Stop all the raccoons from cheating at your casino\nby taking a picture of them on the polaroid."
+	intro_instruction_card.add_child(intro_instruction_label)
 
 func _build_camera_indicator() -> void:
 	# Small top-right HUD readout of the webcam gesture detector (web only).
@@ -515,7 +628,11 @@ func _on_night_changed(night: int) -> void:
 		r.reset_players()
 	_reset_characters()
 	_close_detail()
-	_show_banner("NIGHT %d" % night)
+	_randomize_film_props()
+	GameManager.running = false
+	await _play_night_intro(night)
+	monitor_screen.visible = true
+	GameManager.running = true
 
 func _on_clock_changed(text: String) -> void:
 	clock_label.text = text
@@ -523,10 +640,10 @@ func _on_clock_changed(text: String) -> void:
 
 func _on_photos_changed(count: int) -> void:
 	photos_label.text = "Photos: %d" % count
-	photos_label.add_theme_color_override(
-		"font_color", Color(1, 0.4, 0.4) if count == 0 else Color(1, 1, 1))
 	if photo_btn:
 		photo_btn.disabled = count <= 0
+	for i in film_sprites.size():
+		film_sprites[i].visible = i < count
 
 func _on_camera_status_changed(status: String) -> void:
 	if camera_label == null:
@@ -576,6 +693,47 @@ func _show_banner(text: String) -> void:
 	t.tween_interval(1.2)
 	t.tween_property(banner, "modulate:a", 0.0, 0.6)
 	t.tween_callback(func(): banner.visible = false)
+
+func _play_night_intro(night: int) -> void:
+	intro_sequence_running = true
+	intro_overlay.visible = true
+	intro_day_card.visible = true
+	intro_day_card.modulate.a = 0.0
+	intro_instruction_card.visible = false
+	intro_instruction_card.modulate.a = 0.0
+	intro_day_label.text = "Day %d" % night
+	for i in intro_day_films.size():
+		intro_day_films[i].visible = i < GameManager.PHOTOS_PER_NIGHT
+
+	intro_overlay.modulate.a = 1.0
+	var fade_in_day := create_tween()
+	fade_in_day.tween_property(intro_day_card, "modulate:a", 1.0, 1.0)
+	await fade_in_day.finished
+	await get_tree().create_timer(2.8).timeout
+
+	if not has_shown_first_time_instructions:
+		has_shown_first_time_instructions = true
+		intro_instruction_card.visible = true
+		var fade_day := create_tween()
+		fade_day.tween_property(intro_day_card, "modulate:a", 0.0, 1.5)
+		await fade_day.finished
+		intro_day_card.visible = false
+		await get_tree().create_timer(0.35).timeout
+		var fade_in_instructions := create_tween()
+		fade_in_instructions.tween_property(intro_instruction_card, "modulate:a", 1.0, 1.5)
+		await fade_in_instructions.finished
+		await get_tree().create_timer(4.8).timeout
+	else:
+		await get_tree().create_timer(0.9).timeout
+
+	var fade_out := create_tween()
+	fade_out.tween_property(intro_overlay, "modulate:a", 0.0, 1.6)
+	await fade_out.finished
+	intro_overlay.visible = false
+	intro_instruction_card.visible = false
+	intro_day_card.visible = true
+	intro_day_card.modulate.a = 1.0
+	intro_sequence_running = false
 
 func _get_screen_at_point(point: Vector2) -> int:
 	for i in range(ROOM_COUNT - 1, -1, -1):
