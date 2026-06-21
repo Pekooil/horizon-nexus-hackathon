@@ -2,6 +2,7 @@
 
 [ext_resource type="Script" path="res://scripts/start_screen.gd" id="1_start"]
 [ext_resource type="Texture2D" path="res://assets/start-screen.png" id="2_bg"]
+[ext_resource type="FontFile" path="res://assets/fonts/Manrope-Medium.ttf" id="3_manrope"]
 
 [node name="StartScreen" type="Control"]
 layout_mode = 3
@@ -33,3 +34,19 @@ grow_vertical = 2
 focus_mode = 0
 flat = true
 text = ""
+
+[node name="PressAnyKey" type="Label" parent="."]
+layout_mode = 1
+anchors_preset = 14
+anchor_top = 1.0
+anchor_right = 1.0
+anchor_bottom = 1.0
+offset_top = -72.0
+offset_bottom = -28.0
+grow_horizontal = 2
+grow_vertical = 0
+theme_override_fonts/font = ExtResource("3_manrope")
+theme_override_font_sizes/font_size = 26
+theme_override_colors/font_color = Color(1, 1, 1, 0.9)
+text = "[press any key to start]"
+horizontal_alignment = 1

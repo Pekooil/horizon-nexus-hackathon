@@ -29,7 +29,7 @@ const ROOM_GRAPH := {
 const ENTRANCE_ROOM := 0
 const MonitorQuad = preload("res://scripts/monitor_quad.gd")
 const CHUNKY_FONT = preload("res://assets/ChunkyRetro-6YmnD.otf")
-const MANROPE_FONT = preload("res://assets/fonts/Manrope-Regular.ttf")
+const MANROPE_FONT = preload("res://assets/fonts/Manrope-Medium.ttf")
 const POLAROID_TEXTURE = preload("res://assets/polaroid.png")
 const FILM_TEXTURE = preload("res://assets/film.png")
 const MONEY_SYMBOL_TEXTURE := preload("res://assets/money_digits/money.png")
@@ -76,7 +76,7 @@ var money_sprites: Array[TextureRect] = []
 var film_sprites: Array[TextureRect] = []
 var film_base_positions: Array[Vector2] = []
 var intro_overlay: Control
-var intro_day_card: VBoxContainer
+var intro_day_card: Control
 var intro_day_label: Label
 var intro_instruction_card: CenterContainer
 var intro_instruction_label: Label
@@ -387,41 +387,51 @@ func _build_intro_overlay() -> void:
 	day_center.set_anchors_preset(Control.PRESET_FULL_RECT)
 	intro_overlay.add_child(day_center)
 
-	intro_day_card = VBoxContainer.new()
-	intro_day_card.alignment = BoxContainer.ALIGNMENT_CENTER
-	intro_day_card.add_theme_constant_override("separation", 44)
+	intro_day_card = Control.new()
+	intro_day_card.custom_minimum_size = Vector2(1200, 520)
 	day_center.add_child(intro_day_card)
 
 	intro_day_label = Label.new()
+	intro_day_label.layout_mode = 0
+	intro_day_label.offset_left = 0.0
+	intro_day_label.offset_top = 0.0
+	intro_day_label.offset_right = 1200.0
+	intro_day_label.offset_bottom = 280.0
 	intro_day_label.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+	intro_day_label.vertical_alignment = VERTICAL_ALIGNMENT_CENTER
 	intro_day_label.add_theme_font_override("font", CHUNKY_FONT)
-	intro_day_label.add_theme_font_size_override("font_size", 130)
+	intro_day_label.add_theme_font_size_override("font_size", 293)
 	intro_day_label.add_theme_color_override("font_color", Color.WHITE)
 	intro_day_card.add_child(intro_day_label)
 
 	var day_row := HBoxContainer.new()
+	day_row.layout_mode = 0
+	day_row.offset_left = 0.0
+	day_row.offset_top = 255.0
+	day_row.offset_right = 1200.0
+	day_row.offset_bottom = 380.0
 	day_row.alignment = BoxContainer.ALIGNMENT_CENTER
 	day_row.add_theme_constant_override("separation", 36)
 	intro_day_card.add_child(day_row)
 
-	var intro_polaroid := TextureRect.new()
-	intro_polaroid.custom_minimum_size = Vector2(120, 120)
-	intro_polaroid.texture = POLAROID_TEXTURE
-	intro_polaroid.expand_mode = TextureRect.EXPAND_IGNORE_SIZE
-	intro_polaroid.stretch_mode = TextureRect.STRETCH_KEEP_ASPECT_CENTERED
-	day_row.add_child(intro_polaroid)
+		var intro_polaroid := TextureRect.new()
+		intro_polaroid.custom_minimum_size = Vector2(138, 138)
+		intro_polaroid.texture = POLAROID_TEXTURE
+		intro_polaroid.expand_mode = TextureRect.EXPAND_IGNORE_SIZE
+		intro_polaroid.stretch_mode = TextureRect.STRETCH_KEEP_ASPECT_CENTERED
+		day_row.add_child(intro_polaroid)
 
 	var intro_film_row := HBoxContainer.new()
 	intro_film_row.alignment = BoxContainer.ALIGNMENT_CENTER
 	intro_film_row.add_theme_constant_override("separation", 6)
 	day_row.add_child(intro_film_row)
 
-	for i in GameManager.PHOTOS_PER_NIGHT:
-		var intro_film := TextureRect.new()
-		intro_film.custom_minimum_size = Vector2(40, 64)
-		intro_film.texture = FILM_TEXTURE
-		intro_film.expand_mode = TextureRect.EXPAND_IGNORE_SIZE
-		intro_film.stretch_mode = TextureRect.STRETCH_KEEP_ASPECT_CENTERED
+		for i in GameManager.PHOTOS_PER_NIGHT:
+			var intro_film := TextureRect.new()
+			intro_film.custom_minimum_size = Vector2(46, 74)
+			intro_film.texture = FILM_TEXTURE
+			intro_film.expand_mode = TextureRect.EXPAND_IGNORE_SIZE
+			intro_film.stretch_mode = TextureRect.STRETCH_KEEP_ASPECT_CENTERED
 		intro_film_row.add_child(intro_film)
 		intro_day_films.append(intro_film)
 
