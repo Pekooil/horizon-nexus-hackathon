@@ -27,6 +27,16 @@ const ROOM_GRAPH := {
 	5: [3, 4],       # Slot Machines -> Poker, Roulette
 }
 const ENTRANCE_ROOM := 0
+
+# Single-camera "flip open/close" + drift + static tuning (FNAF 2 reference).
+const FLIP_OPEN_TIME := 0.24       # how long the screen takes to snap open
+const FLIP_CLOSE_TIME := 0.18      # snapping shut is a touch faster
+const STATIC_BASE := 0.10          # faint static always present on a single feed
+const STATIC_BURST := 0.9          # heavy static during the open/close flip
+const PAN_ZOOM := 1.06             # slight zoom so the slow drift never shows edges
+const PAN_AMOUNT := Vector2(22.0, 12.0)   # how far the camera drifts (px)
+const PAN_SPEED := Vector2(0.55, 0.37)    # drift frequency per axis (rad/s)
+
 const MonitorQuad = preload("res://scripts/monitor_quad.gd")
 const CHUNKY_FONT = preload("res://assets/ChunkyRetro-6YmnD.otf")
 const MANROPE_FONT = preload("res://assets/fonts/Manrope-Medium.ttf")
@@ -65,6 +75,11 @@ var characters: Array[Dictionary] = []   # roster: {id, room (-1 = queued), seat
 # Popups still built in code (modal UI, not part of the main screen):
 var detail_view: Control
 var detail_texture: TextureRect
+var detail_static: ColorRect          # animated TV-static noise over the feed
+var detail_texture_base_pos: Vector2  # un-drifted position, restored each open
+var detail_static_base_pos: Vector2
+var detail_pan_time := 0.0            # drives the slow camera drift
+var detail_transitioning := false     # true while the flip open/close plays
 var detail_label: Label
 var photo_btn: Button
 var banner: Label
@@ -137,6 +152,7 @@ func _unhandled_input(event: InputEvent) -> void:
 			get_viewport().set_input_as_handled()
 
 func _process(delta: float) -> void:
+	_update_detail_pan(delta)
 	if intro_sequence_running or not GameManager.running:
 		return
 	spawn_timer -= delta
@@ -228,7 +244,24 @@ func _build_detail_view() -> void:
 	detail_texture.offset_top = 70
 	detail_texture.offset_right = -80
 	detail_texture.offset_bottom = -110
+	detail_texture.pivot_offset = Vector2.ZERO
 	detail_view.add_child(detail_texture)
+
+	# Animated TV static, sized exactly over the feed. Added right after the feed
+	# so it sits above the picture but below the label / button bar / floor map.
+	detail_static = ColorRect.new()
+	detail_static.set_anchors_preset(Control.PRESET_FULL_RECT)
+	detail_static.offset_left = 80
+	detail_static.offset_top = 70
+	detail_static.offset_right = -80
+	detail_static.offset_bottom = -110
+	detail_static.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	detail_static.material = _make_static_material()
+	detail_view.add_child(detail_static)
+
+	# Capture the resting positions so the slow drift always pans around them.
+	detail_texture_base_pos = Vector2(detail_texture.offset_left, detail_texture.offset_top)
+	detail_static_base_pos = Vector2(detail_static.offset_left, detail_static.offset_top)
 
 	detail_label = _make_label("CAM")
 	detail_label.set_anchors_preset(Control.PRESET_TOP_WIDE)
@@ -575,12 +608,14 @@ func _spawn_ferret() -> void:
 			return
 
 func _open_detail(i: int) -> void:
+	var switching := detail_view.visible   # hopping rooms via the map vs. a fresh open
 	current_detail = i
 	detail_texture.texture = feeds[i].get_texture()
 	detail_label.text = "%s  —  look closely for a cheater" % ROOM_NAMES[_screen_to_room(i)]
 	detail_view.visible = true
 	monitor_screen.visible = false
 	_update_map_highlight()
+	_play_camera_flip_open(switching)
 	# Turn on webcam gesture detection while this camera screen is open. The call
 	# runs inside the click that opened the screen, so the browser allows the prompt.
 	if gesture_input != null:
@@ -588,15 +623,25 @@ func _open_detail(i: int) -> void:
 		_on_camera_status_changed("starting")
 		gesture_input.request_camera()
 
-func _close_detail() -> void:
-	detail_view.visible = false
-	monitor_screen.visible = true
+func _close_detail(animate := true) -> void:
 	mouse_default_cursor_shape = CURSOR_ARROW
 	current_detail = -1
 	# Stop detecting once the player is back on the monitor wall.
 	if gesture_input != null:
 		gesture_input.stop_camera()
 		camera_label.visible = false
+	if not detail_view.visible:
+		return
+	# Skip the flip when something else is taking over the screen (e.g. the night
+	# intro fades in over everything anyway).
+	if not animate:
+		detail_transitioning = false
+		detail_view.visible = false
+		monitor_screen.visible = true
+		return
+	await _play_camera_flip_close()
+	detail_view.visible = false
+	monitor_screen.visible = true
 
 func _take_photo() -> void:
 	if current_detail < 0:
@@ -637,7 +682,7 @@ func _on_night_changed(night: int) -> void:
 	for r in rooms:
 		r.reset_players()
 	_reset_characters()
-	_close_detail()
+	_close_detail(false)
 	_randomize_film_props()
 	GameManager.running = false
 	await _play_night_intro(night)
@@ -694,6 +739,106 @@ func _play_flash() -> void:
 	flash.color.a = 0.9
 	var t := create_tween()
 	t.tween_property(flash, "color:a", 0.0, 0.35)
+
+# --- single-camera flip / drift / static -----------------------------------
+
+## Builds the animated TV-static material laid over a single feed. White noise in
+## chunky cells, refreshed a few times a second, with faint scanlines; `intensity`
+## scales its opacity so we can burst it during the flip and keep it faint while
+## viewing. GL-Compatibility-safe canvas_item shader.
+func _make_static_material() -> ShaderMaterial:
+	var shader := Shader.new()
+	shader.code = """
+shader_type canvas_item;
+
+uniform float intensity : hint_range(0.0, 1.0) = 0.1;
+
+float rand(vec2 co) {
+	return fract(sin(dot(co, vec2(12.9898, 78.233))) * 43758.5453);
+}
+
+void fragment() {
+	float frame = floor(TIME * 20.0);
+	vec2 cell = floor(UV * vec2(320.0, 180.0));
+	float n = rand(cell + vec2(frame * 1.7, frame * 0.3));
+	float scan = 0.85 + 0.15 * sin(UV.y * 565.0);
+	COLOR = vec4(vec3(n) * scan, n * intensity);
+}
+"""
+	var mat := ShaderMaterial.new()
+	mat.shader = shader
+	mat.set_shader_parameter("intensity", STATIC_BASE)
+	return mat
+
+func _set_static_intensity(value: float) -> void:
+	if detail_static != null and detail_static.material != null:
+		detail_static.material.set_shader_parameter("intensity", value)
+
+## FNAF-style "monitor snaps up": the feed flips open from a thin horizontal line
+## with a heavy static burst that settles to the faint baseline. When `switching`
+## (hopping rooms from the map) the screen is already open, so we just re-burst the
+## static instead of replaying the full flip.
+func _play_camera_flip_open(switching: bool) -> void:
+	detail_pan_time = 0.0
+	detail_texture.position = detail_texture_base_pos
+	detail_static.position = detail_static_base_pos
+	detail_texture.pivot_offset = detail_texture.size / 2.0
+	detail_static.pivot_offset = detail_static.size / 2.0
+
+	if switching:
+		var open_scale := Vector2(PAN_ZOOM, PAN_ZOOM)
+		detail_texture.scale = open_scale
+		detail_static.scale = open_scale
+		_set_static_intensity(STATIC_BURST)
+		var s := create_tween()
+		s.tween_method(_set_static_intensity, STATIC_BURST, STATIC_BASE, 0.35)
+		return
+
+	detail_transitioning = true
+	var closed_scale := Vector2(PAN_ZOOM, 0.02)
+	var target_scale := Vector2(PAN_ZOOM, PAN_ZOOM)
+	detail_texture.scale = closed_scale
+	detail_static.scale = closed_scale
+	_set_static_intensity(STATIC_BURST)
+
+	var t := create_tween().set_parallel(true)
+	t.tween_property(detail_texture, "scale", target_scale, FLIP_OPEN_TIME) \
+		.set_trans(Tween.TRANS_BACK).set_ease(Tween.EASE_OUT)
+	t.tween_property(detail_static, "scale", target_scale, FLIP_OPEN_TIME) \
+		.set_trans(Tween.TRANS_BACK).set_ease(Tween.EASE_OUT)
+	t.tween_method(_set_static_intensity, STATIC_BURST, STATIC_BASE, FLIP_OPEN_TIME + 0.25)
+	t.chain().tween_callback(func(): detail_transitioning = false)
+
+## Reverse flip: feed collapses back to a line with a static burst. Awaited by
+## `_close_detail` so the view is only hidden once the animation finishes.
+func _play_camera_flip_close() -> Signal:
+	detail_transitioning = true
+	detail_texture.pivot_offset = detail_texture.size / 2.0
+	detail_static.pivot_offset = detail_static.size / 2.0
+	var closed_scale := Vector2(PAN_ZOOM, 0.02)
+	_set_static_intensity(STATIC_BURST)
+
+	var t := create_tween().set_parallel(true)
+	t.tween_property(detail_texture, "scale", closed_scale, FLIP_CLOSE_TIME) \
+		.set_trans(Tween.TRANS_BACK).set_ease(Tween.EASE_IN)
+	t.tween_property(detail_static, "scale", closed_scale, FLIP_CLOSE_TIME) \
+		.set_trans(Tween.TRANS_BACK).set_ease(Tween.EASE_IN)
+	t.chain().tween_callback(func(): detail_transitioning = false)
+	return t.finished
+
+## Slowly drifts the open feed around its resting position so a held camera feels
+## like it's panning. The slight PAN_ZOOM keeps the picture covering the frame so
+## the drift never reveals the dim backdrop. Paused during the flip transitions.
+func _update_detail_pan(delta: float) -> void:
+	if detail_view == null or not detail_view.visible or detail_transitioning:
+		return
+	detail_pan_time += delta
+	var drift := Vector2(
+		sin(detail_pan_time * PAN_SPEED.x) * PAN_AMOUNT.x,
+		sin(detail_pan_time * PAN_SPEED.y) * PAN_AMOUNT.y,
+	)
+	detail_texture.position = detail_texture_base_pos + drift
+	detail_static.position = detail_static_base_pos + drift
 
 func _show_banner(text: String) -> void:
 	banner.text = text
